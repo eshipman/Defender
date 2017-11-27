@@ -11,7 +11,7 @@
 #include "DefenderBackground.h"
 
 /* include the sprite image we are using */
-#include "koopa.h"
+//#include "koopa.h"
 
 /* include the tile map we are using */
 #include "space.h"
@@ -133,11 +133,11 @@ void memcpy16_dma(unsigned short* dest, unsigned short* source, int amount) {
 void setup_background() {
 
     /* load the palette from the image into palette memory*/
-    memcpy16_dma((unsigned short*) bg_palette, (unsigned short*) background_palette, PALETTE_SIZE);
+    memcpy16_dma((unsigned short*) bg_palette, (unsigned short*) DefenderBackground_palette, PALETTE_SIZE);
 
     /* load the image into char block 0 */
-    memcpy16_dma((unsigned short*) char_block(0), (unsigned short*) background_data,
-            (background_width * background_height) / 2);
+    memcpy16_dma((unsigned short*) char_block(0), (unsigned short*) DefenderBackground_data,
+            (DefenderBackground_width * DefenderBackground_height) / 2);
 
     /* set all control the bits in this register */
     *bg0_control = 3 |    /* priority, 0 is highest, 3 is lowest */
@@ -506,26 +506,26 @@ int main() {
 
     /* setup the background 0 */
     setup_background();
-
-    /* setup the sprite image data */
+/*
+    // setup the sprite image data 
     setup_sprite_image();
 
-    /* clear all the sprites on screen now */
+    // clear all the sprites on screen now 
     sprite_clear();
 
-    /* create the koopa */
+    // create the koopa 
     struct Koopa koopa;
     koopa_init(&koopa);
 
-    /* set initial scroll to 0 */
+    // set initial scroll to 0 
     int xscroll = 0;
-
+*/
     /* loop forever */
     while (1) {
-        /* update the koopa */
+        /* update the koopa 
         koopa_update(&koopa, xscroll);
 
-        /* now the arrow keys move the koopa */
+        // now the arrow keys move the koopa 
         if (button_pressed(BUTTON_RIGHT)) {
             if (koopa_right(&koopa)) {
                 xscroll++;
@@ -538,17 +538,17 @@ int main() {
             koopa_stop(&koopa);
         }
 
-        /* check for jumping */
+        // check for jumping 
         if (button_pressed(BUTTON_A)) {
             koopa_jump(&koopa);
         }
 
-        /* wait for vblank before scrolling and moving sprites */
-        wait_vblank();
-        *bg0_x_scroll = xscroll;
-        sprite_update_all();
+        // wait for vblank before scrolling and moving sprites 
+      */  wait_vblank();
+       // *bg0_x_scroll = xscroll;
+       // sprite_update_all();
 
-        /* delay some */
+        // delay some 
         delay(300);
     }
 }
