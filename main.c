@@ -1,5 +1,6 @@
 /*
- * collide.c
+ * Defender Game
+ * By Evan Shipman and Jessica Spranger
  * program which demonstrates sprites colliding with tiles
  */
 
