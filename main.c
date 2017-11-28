@@ -15,7 +15,7 @@
 
 /* include the tile map we are using */
 #include "space.h"
-#include "Landscape.h"
+#include "Landscape2.h"
 
 /* the tile mode flags needed for display control register */
 #define MODE0 0x00
@@ -170,7 +170,7 @@ void setup_background() {
     memcpy16_dma((unsigned short*) screen_block(16), (unsigned short*) space, space_width * space_height);
 
 //Load landscape map into screen black 18
-    memcpy16_dma((unsigned short*) screen_block(18), (unsigned short*) Landscape, Landscape_width * Landscape_height);
+    memcpy16_dma((unsigned short*) screen_block(18), (unsigned short*) Landscape2, Landscape2_width * Landscape2_height);
 }
 /* just kill time */
 void delay(unsigned int amount) {
@@ -601,7 +601,7 @@ int main() {
     /* loop forever */
     while (1) {
 	xscroll--; //Continue to scroll left in the game.
-	if(button_pressed(BUTTON_DOWN)) {
+/*	if(button_pressed(BUTTON_DOWN)) {
 		yscroll++;	
 	}
 	if(button_pressed(BUTTON_UP)) {
@@ -613,7 +613,7 @@ int main() {
 	if(button_pressed(BUTTON_LEFT)) {
 		xscroll--;
 	}
-
+*/
 	wait_vblank();
 	*bg0_x_scroll = xscroll;
 	*bg1_x_scroll = 2*xscroll;
