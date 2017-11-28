@@ -321,41 +321,95 @@ void setup_sprite_image() {
     /* load the image into char block 0 */
     //memcpy16_dma((unsigned short*) sprite_image_memory, (unsigned short*) koopa_data, (koopa_width * koopa_height) / 2);
 }
-
-/* a struct for the koopa's logic and behavior */
+/*
 struct Koopa {
-    /* the actual sprite attribute info */
+    // the actual sprite attribute info
     struct Sprite* sprite;
 
-    /* the x and y postion, in 1/256 pixels */
+    // the x and y postion, in 1/256 pixels
     int x, y;
 
-    /* the koopa's y velocity in 1/256 pixels/second */
+    // the koopa's y velocity in 1/256 pixels/second
     int yvel;
 
-    /* the koopa's y acceleration in 1/256 pixels/second^2 */
+    // the koopa's y acceleration in 1/256 pixels/second^2
     int gravity; 
 
-    /* which frame of the animation he is on */
+    // which frame of the animation he is on
     int frame;
 
-    /* the number of frames to wait before flipping */
+    // the number of frames to wait before flipping
     int animation_delay;
 
-    /* the animation counter counts how many frames until we flip */
+    // the animation counter counts how many frames until we flip
     int counter;
 
-    /* whether the koopa is moving right now or not */
+    // whether the koopa is moving right now or not
     int move;
 
-    /* the number of pixels away from the edge of the screen the koopa stays */
+    // the number of pixels away from the edge of the screen the koopa stays
     int border;
 
-    /* if the koopa is currently falling */
+    // if the koopa is currently falling
     int falling;
 };
 
-/* initialize the koopa */
+// */
+
+struct Player {
+    struct Sprite* sprite;
+
+    int x, y;
+    int frame;
+    int animation_delay;
+    int counter;
+    int move;
+    int border;
+    
+};
+
+void player_init(struct Player* player) {
+        player->x = 100 << 8;
+        player->y = 113 << 8;
+        player->frame = 0;
+        player->animation_delay = 8;
+        player->counter = 0;
+        player->move = 0;
+        player->border = 40;
+        
+        player->sprite = sprite_init(player->x >> 8, player->y >> 8, SIZE_16_32, 0, 0, player->frame, 0);
+}
+
+int player_left(struct Player* player) {
+        sprite_set_horizontal_flip(player->sprite, 1);
+        player->move = 1;
+
+        if ((player->x >> 8) < player->border)
+                return 1;
+        else {
+                player->x -= 256;
+                return 0;
+        }
+}
+
+int player_right(struct Player* player) {
+        sprite_set_horizontal_flip(player->sprite, 0);
+        player->move = 1;
+
+        if ((player->x >> 8) > (SCREEN_WIDTH - 16 - player->border))
+                return 1;
+        else
+                player->x += 256;
+}
+
+void player_stop(struct Player* player) {
+    player->move = 0;
+    player->frame = 0;
+    player->counter = 7;
+    sprite_set_offset(player->sprite, player->frame);
+}
+ /*
+// initialize the koopa
 void koopa_init(struct Koopa* koopa) {
     koopa->x = 100 << 8;
     koopa->y = 113 << 8;
@@ -370,37 +424,37 @@ void koopa_init(struct Koopa* koopa) {
     koopa->sprite = sprite_init(koopa->x >> 8, koopa->y >> 8, SIZE_16_32, 0, 0, koopa->frame, 0);
 }
 
-/* move the koopa left or right returns if it is at edge of the screen */
+// move the koopa left or right returns if it is at edge of the screen
 int koopa_left(struct Koopa* koopa) {
-    /* face left */
+    // face left
     sprite_set_horizontal_flip(koopa->sprite, 1);
     koopa->move = 1;
 
-    /* if we are at the left end, just scroll the screen */
+    // if we are at the left end, just scroll the screen
     if ((koopa->x >> 8) < koopa->border) {
         return 1;
     } else {
-        /* else move left */
+        // else move left
         koopa->x -= 256;
         return 0;
     }
 }
 int koopa_right(struct Koopa* koopa) {
-    /* face right */
+    // face right
     sprite_set_horizontal_flip(koopa->sprite, 0);
     koopa->move = 1;
 
-    /* if we are at the right end, just scroll the screen */
+    // if we are at the right end, just scroll the screen
     if ((koopa->x >> 8) > (SCREEN_WIDTH - 16 - koopa->border)) {
         return 1;
     } else {
-        /* else move right */
+        // else move right
         koopa->x += 256;
         return 0;
     }
 }
 
-/* stop the koopa from walking left/right */
+// stop the koopa from walking left/right
 void koopa_stop(struct Koopa* koopa) {
     koopa->move = 0;
     koopa->frame = 0;
@@ -408,7 +462,7 @@ void koopa_stop(struct Koopa* koopa) {
     sprite_set_offset(koopa->sprite, koopa->frame);
 }
 
-/* start the koopa jumping, unless already fgalling */
+// start the koopa jumping, unless already fgalling
 void koopa_jump(struct Koopa* koopa) {
     if (!koopa->falling) {
         koopa->yvel = -1350;
@@ -416,19 +470,21 @@ void koopa_jump(struct Koopa* koopa) {
     }
 }
 
-/* finds which tile a screen coordinate maps to, taking scroll into account */
+// */
+
+// finds which tile a screen coordinate maps to, taking scroll into account
 unsigned short tile_lookup(int x, int y, int xscroll, int yscroll,
         const unsigned short* tilemap, int tilemap_w, int tilemap_h) {
 
-    /* adjust for the scroll */
+    // adjust for the scroll
     x += xscroll;
     y += yscroll;
 
-    /* convert from screen coordinates to tile coordinates */
+    // convert from screen coordinates to tile coordinates
     x >>= 3;
     y >>= 3;
 
-    /* account for wraparound */
+    // account for wraparound
     while (x >= tilemap_w) {
         x -= tilemap_w;
     }
@@ -442,10 +498,10 @@ unsigned short tile_lookup(int x, int y, int xscroll, int yscroll,
         y += tilemap_h;
     }
 
-    /* lookup this tile from the map */
+    // lookup this tile from the map
     int index = y * tilemap_w + x;
 
-    /* return the tile */
+    // return the tile
     return tilemap[index];
 }
 
