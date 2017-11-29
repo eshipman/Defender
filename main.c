@@ -536,26 +536,27 @@ struct Player {
 };
 
 void player_init(struct Player* player) {
-        player->x = 100 << 8;
-        player->y = 113 << 8;
+        player->x = 100;
+        player->y = 113;
         player->frame = 0;
         player->animation_delay = 8;
         player->counter = 0;
         player->move = 0;
         player->border = 40;
 
-        player->sprite = sprite_init(player->x >> 8, player->y >> 8, SIZE_16_8, 0, 0, player->frame, 0);
+        player->sprite = sprite_init(player->x, player->y, SIZE_16_8, 0, 0, player->frame, 0);
 }
 
 int player_left(struct Player* player) {
         sprite_set_horizontal_flip(player->sprite, 1);
         player->move = 1;
 
-        if ((player->x >> 8) < player->border)
+        if ((player->x) < player->border)
                 return 1;
         else {
-                player->x -= 256;
-                return 0;
+             //   player->x -= 256;
+               player->x--;
+		 return 0;
         }
 }
 
@@ -563,10 +564,13 @@ int player_right(struct Player* player) {
         sprite_set_horizontal_flip(player->sprite, 0);
         player->move = 1;
 
-        if ((player->x >> 8) > (SCREEN_WIDTH - 16 - player->border))
+        if ((player->x) > (SCREEN_WIDTH - 16 - player->border))
                 return 1;
-        else
-                player->x += 256;
+        else{
+             //   player->x += 256;
+		player->x++;
+		return 0;
+	}
 }
 
 void player_stop(struct Player* player) {
@@ -672,6 +676,25 @@ unsigned short tile_lookup(int x, int y, int xscroll, int yscroll,
         return tilemap[index];
 }
 
+void player_update(struct Player* player)
+{
+	if(player->move)
+	{
+		player->counter++;
+		if(player->counter >= player->animation_delay) {
+			player->frame = player->frame + 16;
+			if(player->frame > 16) {
+				player->frame = 0;
+			}
+			sprite_set_offset(player->sprite, player->frame);
+			player->counter = 0;
+		}
+
+	}
+	sprite_position(player->sprite, player->x, player->y);
+
+}
+
 /*
 // update the koopa 
 void koopa_update(struct Koopa* koopa, int xscroll) {
@@ -772,7 +795,7 @@ int main() {
 
                 delay(700);
                 */
-        //        player_update(&player, xscroll);
+                player_update(&player);
 
                 // now the arrow keys move the koopa 
                 if (button_pressed(BUTTON_RIGHT)) {
