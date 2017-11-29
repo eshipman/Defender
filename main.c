@@ -544,7 +544,7 @@ void player_init(struct Player* player) {
         player->move = 0;
         player->border = 40;
 
-        player->sprite = sprite_init(player->x >> 8, player->y >> 8, SIZE_16_32, 0, 0, player->frame, 0);
+        player->sprite = sprite_init(player->x >> 8, player->y >> 8, SIZE_16_8, 0, 0, player->frame, 0);
 }
 
 int player_left(struct Player* player) {
@@ -741,7 +741,7 @@ int main() {
 
         /* setup the background 0 */
         setup_background();
-        /*
+        
         // setup the sprite image data 
         setup_sprite_image();
 
@@ -749,16 +749,14 @@ int main() {
         sprite_clear();
 
         // create the koopa 
-        struct Koopa koopa;
-        koopa_init(&koopa);
+        struct Player player;
+        player_init(&player);
 
         // set initial scroll to 0 
         int xscroll = 0;
-        */
-        int xscroll = 0;
         int yscroll = 0;
         /* loop forever */
-        while (1) {
+        while (1) { /*
                 if(button_pressed(BUTTON_RIGHT)) {
                         xscroll++;
                 }
@@ -773,34 +771,30 @@ int main() {
                 *bg1_y_scroll = yscroll;
 
                 delay(700);
-                /* update the koopa 
-                   koopa_update(&koopa, xscroll);
+                */
+        //        player_update(&player, xscroll);
 
                 // now the arrow keys move the koopa 
                 if (button_pressed(BUTTON_RIGHT)) {
-                if (koopa_right(&koopa)) {
+                if (player_right(&player)) {
                 xscroll++;
                 }
                 } else if (button_pressed(BUTTON_LEFT)) {
-                if (koopa_left(&koopa)) {
+                if (player_left(&player)) {
                 xscroll--;
                 }
                 } else {
-                koopa_stop(&koopa);
-                }
-
-                // check for jumping 
-                if (button_pressed(BUTTON_A)) {
-                koopa_jump(&koopa);
+                player_stop(&player);
                 }
 
                 // wait for vblank before scrolling and moving sprites 
-                */ // wait_vblank();
-                // *bg0_x_scroll = xscroll;
-                // sprite_update_all();
+                 wait_vblank();
+                 *bg0_x_scroll = 2*xscroll;
+                 *bg1_x_scroll = xscroll;
+		 sprite_update_all();
 
                 // delay some 
-                //delay(300);
+                delay(700);
         }
 }
 
