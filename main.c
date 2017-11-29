@@ -5,6 +5,7 @@
  */
 
 #include "music.h"
+#include "player.h"
 
 /* include the background image we are using */
 #include "DefenderBackground.h"
@@ -479,6 +480,8 @@ void sprite_set_offset(struct Sprite* sprite, int offset) {
 
 /* setup the sprite image and palette */
 void setup_sprite_image() {
+        memcpy16_dma((unsigned short*) sprite_palette, (unsigned short*) player_palette, PALETTE_SIZE);
+        memcpy16_dma((unsigned short*) sprite_image_memory, (unsigned short*) player_data, (player_width * player_height) / 2);
         /* load the palette from the image into palette memory*/
         // memcpy16_dma((unsigned short*) sprite_palette, (unsigned short*) koopa_palette, PALETTE_SIZE);
 
@@ -756,20 +759,13 @@ int main() {
         int yscroll = 0;
         /* loop forever */
         while (1) {
-                xscroll--; //Continue to scroll left in the game.
-                /*	if(button_pressed(BUTTON_DOWN)) {
-                        yscroll++;	`
-                        }
-                        if(button_pressed(BUTTON_UP)) {
-                        yscroll--;
-                        }
-                        if(button_pressed(BUTTON_RIGHT)) {
+                if(button_pressed(BUTTON_RIGHT)) {
                         xscroll++;
-                        }
-                        if(button_pressed(BUTTON_LEFT)) {
+                }
+                if(button_pressed(BUTTON_LEFT)) {
                         xscroll--;
-                        }
-                        */
+                }
+
                 wait_vblank();
                 *bg0_x_scroll = xscroll;
                 *bg1_x_scroll = 2*xscroll;
