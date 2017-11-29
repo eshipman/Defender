@@ -542,19 +542,19 @@ void player_init(struct Player* player) {
         player->animation_delay = 8;
         player->counter = 0;
         player->move = 0;
-        player->border = 40;
+        player->border = 32;
 
-        player->sprite = sprite_init(player->x >> 8, player->y >> 8, SIZE_8_16, 0, 0, player->frame, 0);
+        player->sprite = sprite_init(player->x >> 8, player->y >> 8, SIZE_16_8, 0, 0, player->frame, 0);
 }
 
 int player_left(struct Player* player) {
         sprite_set_horizontal_flip(player->sprite, 1);
         player->move = 1;
 
-        if ((player->x) < player->border)
+        if ((player->x >> 8) < player->border)
                 return 1;
         else {
-                player->x -= 256;
+                player->x -= 256*2;
                 //player->x--;
                 return 0;
         }
@@ -564,10 +564,10 @@ int player_right(struct Player* player) {
         sprite_set_horizontal_flip(player->sprite, 0);
         player->move = 1;
 
-        if ((player->x) > (SCREEN_WIDTH - 16 - player->border))
+        if ((player->x >> 8) > (SCREEN_WIDTH - 16 - player->border))
                 return 1;
         else{
-                player->x += 256;
+                player->x += 256*2;
                 //	player->x++;
                 return 0;
         }
@@ -576,10 +576,10 @@ int player_right(struct Player* player) {
 int player_up(struct Player* player) {
         player->move = 1;
 
-        if ((player->y) > 0)
+        if ((player->y >> 8) <= 0)
                 return 1;
         else
-                player->y -= 256;
+                player->y -= 256*2;
         return 0;
 
 }
@@ -587,10 +587,10 @@ int player_up(struct Player* player) {
 int player_down(struct Player* player) {
         player->move = 1;
 
-        if ((player->y) > (SCREEN_HEIGHT - 8))
+        if ((player->y >> 8) >= (SCREEN_HEIGHT - 32))
                 return 1;
         else
-                player->y += 256;
+                player->y += 256*2;
         return 0;
 }
 
@@ -820,26 +820,26 @@ int main() {
                 // now the arrow keys move the koopa 
                 if (button_pressed(BUTTON_RIGHT)) {
                         if (player_right(&player)) {
-                                xscroll++;
+                                xscroll += 2;
                         }
                 }
                 if (button_pressed(BUTTON_LEFT)) {
                         if (player_left(&player)) {
-                                xscroll--;
+                              xscroll -= 2;
                         }
                 }
                 if (button_pressed(BUTTON_DOWN))
                         player_down(&player);
                 if (button_pressed(BUTTON_UP))
-                        player_up(&button);
+                        player_up(&player);
                 if (!button_pressed(BUTTON_LEFT | BUTTON_RIGHT | BUTTON_UP | BUTTON_DOWN)) {
                         player_stop(&player);
                 }
 
                 // wait for vblank before scrolling and moving sprites 
                 wait_vblank();
-                *bg0_x_scroll = 0.5 * xscroll;
-                *bg1_x_scroll = 2 * xscroll;
+                *bg0_x_scroll = 0.25 * xscroll;
+                *bg1_x_scroll = xscroll;
                 player_update(&player);
                 sprite_update_all();
 
