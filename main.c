@@ -536,15 +536,15 @@ struct Player {
 };
 
 void player_init(struct Player* player) {
-        player->x = 100;
-        player->y = 113;
+        player->x = 100 << 8;
+        player->y = 113 << 8;
         player->frame = 0;
         player->animation_delay = 8;
         player->counter = 0;
         player->move = 0;
         player->border = 40;
 
-        player->sprite = sprite_init(player->x, player->y, SIZE_16_8, 0, 0, player->frame, 0);
+        player->sprite = sprite_init(player->x >> 8, player->y >> 8, SIZE_8_16, 0, 0, player->frame, 0);
 }
 
 int player_left(struct Player* player) {
@@ -554,9 +554,9 @@ int player_left(struct Player* player) {
         if ((player->x) < player->border)
                 return 1;
         else {
-             //   player->x -= 256;
-               player->x--;
-		 return 0;
+                player->x -= 256;
+                //player->x--;
+                return 0;
         }
 }
 
@@ -567,10 +567,31 @@ int player_right(struct Player* player) {
         if ((player->x) > (SCREEN_WIDTH - 16 - player->border))
                 return 1;
         else{
-             //   player->x += 256;
-		player->x++;
-		return 0;
-	}
+                player->x += 256;
+                //	player->x++;
+                return 0;
+        }
+}
+
+int player_up(struct Player* player) {
+        player->move = 1;
+
+        if ((player->y) > 0)
+                return 1;
+        else
+                player->y -= 256;
+        return 0;
+
+}
+
+int player_down(struct Player* player) {
+        player->move = 1;
+
+        if ((player->y) > (SCREEN_HEIGHT - 8))
+                return 1;
+        else
+                player->y += 256;
+        return 0;
 }
 
 void player_stop(struct Player* player) {
@@ -678,20 +699,20 @@ unsigned short tile_lookup(int x, int y, int xscroll, int yscroll,
 
 void player_update(struct Player* player)
 {
-	if(player->move)
-	{
-		player->counter++;
-		if(player->counter >= player->animation_delay) {
-			player->frame = player->frame + 16;
-			if(player->frame > 16) {
-				player->frame = 0;
-			}
-			sprite_set_offset(player->sprite, player->frame);
-			player->counter = 0;
-		}
+        if(player->move)
+        {
+                player->counter++;
+                if(player->counter >= player->animation_delay) {
+                        player->frame = player->frame + 16;
+                        if(player->frame > 16) {
+                                player->frame = 0;
+                        }
+                        sprite_set_offset(player->sprite, player->frame);
+                        player->counter = 0;
+                }
 
-	}
-	sprite_position(player->sprite, player->x, player->y);
+        }
+        sprite_position(player->sprite, player->x >> 8, player->y >> 8);
 
 }
 
@@ -764,7 +785,7 @@ int main() {
 
         /* setup the background 0 */
         setup_background();
-        
+
         // setup the sprite image data 
         setup_sprite_image();
 
@@ -780,41 +801,47 @@ int main() {
         int yscroll = 0;
         /* loop forever */
         while (1) { /*
-                if(button_pressed(BUTTON_RIGHT)) {
-                        xscroll++;
-                }
-                if(button_pressed(BUTTON_LEFT)) {
-                        xscroll--;
-                }
+                       if(button_pressed(BUTTON_RIGHT)) {
+                       xscroll++;
+                       }
+                       if(button_pressed(BUTTON_LEFT)) {
+                       xscroll--;
+                       }
 
-                wait_vblank();
-                *bg0_x_scroll = xscroll;
-                *bg1_x_scroll = 2*xscroll;
-                *bg0_y_scroll = yscroll;
-                *bg1_y_scroll = yscroll;
+                       wait_vblank();
+                     *bg0_x_scroll = xscroll;
+                     *bg1_x_scroll = 2*xscroll;
+                     *bg0_y_scroll = yscroll;
+                     *bg1_y_scroll = yscroll;
 
-                delay(700);
-                */
-                player_update(&player);
+                     delay(700);
+                     */
 
                 // now the arrow keys move the koopa 
                 if (button_pressed(BUTTON_RIGHT)) {
-                if (player_right(&player)) {
-                xscroll++;
+                        if (player_right(&player)) {
+                                xscroll++;
+                        }
                 }
-                } else if (button_pressed(BUTTON_LEFT)) {
-                if (player_left(&player)) {
-                xscroll--;
+                if (button_pressed(BUTTON_LEFT)) {
+                        if (player_left(&player)) {
+                                xscroll--;
+                        }
                 }
-                } else {
-                player_stop(&player);
+                if (button_pressed(BUTTON_DOWN))
+                        player_down(&player);
+                if (button_pressed(BUTTON_UP))
+                        player_up(&button);
+                if (!button_pressed(BUTTON_LEFT | BUTTON_RIGHT | BUTTON_UP | BUTTON_DOWN)) {
+                        player_stop(&player);
                 }
 
                 // wait for vblank before scrolling and moving sprites 
-                 wait_vblank();
-                 *bg0_x_scroll = 2*xscroll;
-                 *bg1_x_scroll = xscroll;
-		 sprite_update_all();
+                wait_vblank();
+                *bg0_x_scroll = 0.5 * xscroll;
+                *bg1_x_scroll = 2 * xscroll;
+                player_update(&player);
+                sprite_update_all();
 
                 // delay some 
                 delay(700);
