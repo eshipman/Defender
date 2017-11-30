@@ -472,6 +472,15 @@ void sprite_set_horizontal_flip(struct Sprite* sprite, int horizontal_flip) {
         }
 }
 
+int sprite_is_horizontally_flipped(struct Sprite* sprite) {
+	if(sprite->attribute1 & 0x1000 >> 12)
+	{
+		return 1;
+	} 
+	else
+		return 0;
+}
+
 /* change the tile offset of a sprite */
 void sprite_set_offset(struct Sprite* sprite, int offset) {
         /* clear the old offset */
@@ -538,6 +547,18 @@ struct Player {
 
 };
 
+struct Bullet {
+	struct Sprite* sprite;
+	struct Player* player;
+	int x, y;
+	int frame;
+	int animation_delay;
+	int counter;
+	int move;
+	int border;
+	int xvel;
+};
+
 void enemy_init(struct Player* enemy, int x, int y) {
         enemy->x = x << 8;
         enemy->y = y << 8;
@@ -559,6 +580,16 @@ void player_init(struct Player* player) {
         player->border = 32;
 
         player->sprite = sprite_init(player->x >> 8, player->y >> 8, SIZE_16_8, 0, 0, player->frame, 0);
+}
+
+void bullet_init(struct Bullet* bullet, struct Player* player) {
+	bullet->player = player;
+	//If the player is facing 
+	if(sprite_is_horizontally_flipped(bullet->player->sprite))
+	{
+		bullet->x = player->x - 16;
+		bullet->y = player->y;	
+	}
 }
 
 int player_left(struct Player* player) {
@@ -853,6 +884,8 @@ int size(struct node* first) {
         }
         return i;
 }
+
+
 
 /* the main function */
 int main() {
