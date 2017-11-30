@@ -1,7 +1,6 @@
 /*
  * Defender Game
  * By Evan Shipman and Jessica Spranger
- * program which demonstrates sprites colliding with tiles
  */
 
 #include <stdlib.h>
@@ -549,14 +548,14 @@ struct Player {
 
 struct Bullet {
 	struct Sprite* sprite;
-	struct Player* player;
+//	struct Player* player;
 	int x, y;
 	int frame;
 	int animation_delay;
 	int counter;
 	int move;
 	int border;
-	int xvel;
+	int dx;
 };
 
 void enemy_init(struct Player* enemy, int x, int y) {
@@ -583,14 +582,41 @@ void player_init(struct Player* player) {
 }
 
 void bullet_init(struct Bullet* bullet, struct Player* player) {
-	bullet->player = player;
-	//If the player is facing 
-	if(sprite_is_horizontally_flipped(bullet->player->sprite))
+	//If the player is facing to the left
+	if(sprite_is_horizontally_flipped(player->sprite))
 	{
-		bullet->x = player->x - 16;
+		bullet->x = player->x - 256*16;
 		bullet->y = player->y;	
+		bullet->dx = -3;
 	}
+	else
+	{
+		bullet->x = player->x + 256*16;
+		bullet->y = player->y;
+		bullet->dx = 3;
+	}
+	bullet->frame = 8;
+	bullet->animation_delay = 8;
+	bullet->counter = 0;
+	bullet->border = 32;
+	
+	bullet->sprite = sprite_init(bullet->x >> 8, bullet->y >> 8, SIZE_8_8, 0, 0, player->frame, 0);
 }
+
+int move_bullet(struct Bullet* bullet)
+{
+	bullet->move = 1;
+	
+	if((bullet->x >> 8) < bullet->border || (bullet->x << 8) > (SCREEN_WIDTH - 16 - bullet->border))
+	{
+		return 1;
+	}
+	else {
+		bullet->x += 256*(bullet->dx);
+	}
+	
+}
+
 
 int player_left(struct Player* player) {
         sprite_set_horizontal_flip(player->sprite, 1);
@@ -957,6 +983,7 @@ int main() {
                 if (!seed)
                         seed = player.x * player.y;
                 int last_x = xscroll;
+
                 if (button_pressed(BUTTON_RIGHT)) {
                         if (player_right(&player)) {
                                 xscroll += 2;
@@ -974,6 +1001,12 @@ int main() {
                 if (!button_pressed(BUTTON_LEFT | BUTTON_RIGHT | BUTTON_UP | BUTTON_DOWN)) {
                         player_stop(&player);
                 }
+
+	//	if(button_pressed(BUTTON_A))
+	//	{
+	//		struct Bullet bullet;
+	//		init_bullet(&bullet, &player);
+	//	}
 
                 if (last_x == xscroll)
                         for (int i = 0; i < num_enemies; i++)
