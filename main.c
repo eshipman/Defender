@@ -928,8 +928,11 @@ int size(struct node* first) {
         }
         return i;
 }
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> parent of 004f9e6... Removed the linked list data structure
 
 /* the main function */
 int main() {
@@ -976,12 +979,18 @@ int main() {
         unsigned int seed = 0;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
+=======
+>>>>>>> parent of 004f9e6... Removed the linked list data structure
         struct node* list = create_node(&enemy, 0);
         //        add(list, &enemy2);
         int num_enemies = 1;
         
+<<<<<<< HEAD
+>>>>>>> parent of 004f9e6... Removed the linked list data structure
+=======
 >>>>>>> parent of 004f9e6... Removed the linked list data structure
         int max_enemies = 128;
         struct Player enemies[max_enemies];
