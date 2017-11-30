@@ -1,6 +1,7 @@
 /*
  * Defender Game
  * By Evan Shipman and Jessica Spranger
+ * program which demonstrates sprites colliding with tiles
  */
 
 #include <stdlib.h>
@@ -471,15 +472,6 @@ void sprite_set_horizontal_flip(struct Sprite* sprite, int horizontal_flip) {
         }
 }
 
-int sprite_is_horizontally_flipped(struct Sprite* sprite) {
-	if(sprite->attribute1 & 0x1000 >> 12)
-	{
-		return 1;
-	} 
-	else
-		return 0;
-}
-
 /* change the tile offset of a sprite */
 void sprite_set_offset(struct Sprite* sprite, int offset) {
         /* clear the old offset */
@@ -546,22 +538,10 @@ struct Player {
 
 };
 
-struct Bullet {
-	struct Sprite* sprite;
-//	struct Player* player;
-	int x, y;
-	int frame;
-	int animation_delay;
-	int counter;
-	int move;
-	int border;
-	int dx;
-};
-
 void enemy_init(struct Player* enemy, int x, int y) {
         enemy->x = x << 8;
         enemy->y = y << 8;
-        enemy->frame = 4;
+        enemy->frame = 0;
         enemy->animation_delay = 2147483647;    //hot fix for flashing sprite
         enemy->counter = 0;                     //need to modify the update player
         enemy->move = 0;                        //function for cleaner fix
@@ -580,43 +560,6 @@ void player_init(struct Player* player) {
 
         player->sprite = sprite_init(player->x >> 8, player->y >> 8, SIZE_16_8, 0, 0, player->frame, 0);
 }
-
-void bullet_init(struct Bullet* bullet, struct Player* player) {
-	//If the player is facing to the left
-	if(sprite_is_horizontally_flipped(player->sprite))
-	{
-		bullet->x = player->x - 256*16;
-		bullet->y = player->y;	
-		bullet->dx = -3;
-	}
-	else
-	{
-		bullet->x = player->x + 256*16;
-		bullet->y = player->y;
-		bullet->dx = 3;
-	}
-	bullet->frame = 8;
-	bullet->animation_delay = 8;
-	bullet->counter = 0;
-	bullet->border = 32;
-	
-	bullet->sprite = sprite_init(bullet->x >> 8, bullet->y >> 8, SIZE_8_8, 0, 0, player->frame, 0);
-}
-
-int move_bullet(struct Bullet* bullet)
-{
-	bullet->move = 1;
-	
-	if((bullet->x >> 8) < bullet->border || (bullet->x << 8) > (SCREEN_WIDTH - 16 - bullet->border))
-	{
-		return 1;
-	}
-	else {
-		bullet->x += 256*(bullet->dx);
-	}
-	
-}
-
 
 int player_left(struct Player* player) {
         sprite_set_horizontal_flip(player->sprite, 1);
@@ -811,24 +754,6 @@ void player_update(struct Player* player)
 
 }
 
-void bullet_update(struct Bullet* bullet)
-{	
-/*	if(bullet->move)
-	{
-		bullet->counter++;
-		if(bullet->counter >= bullet->animation_delay) {
-			bullet->frame = bullet->frame + 16;
-			if(bullet->frame > 16) {
-				bullet->frame = 0;
-			}
-			sprite_set_offset(bullet->sprite, bullet->frame);
-			bullet->counter = 0;
-		}
-	}
-	sprite_position(bullet->sprite, bullet->x >> 8, bullet->y >> 8);
-*/
-}
-
 /*
 // update the koopa 
 void koopa_update(struct Koopa* koopa, int xscroll) {
@@ -928,11 +853,6 @@ int size(struct node* first) {
         }
         return i;
 }
-<<<<<<< HEAD
-
-
-=======
->>>>>>> parent of 004f9e6... Removed the linked list data structure
 
 /* the main function */
 int main() {
@@ -962,43 +882,20 @@ int main() {
         struct Player player;
         player_init(&player);
 
-	int maxbullets = 128;
-	struct Bullet bullets[maxbullets];
-	int bullet_count =0;
-	
-	struct Bullet bullet;
-	bullet_init(&bullet, &player);
-	bullets[bullet_count] = bullet;
-	bullet_count++;
-	
         struct Player enemy, enemy2;
         enemy_init(&enemy, 0, 0);
-        int num_enemies = 1;
         //      enemy_init(&enemy2, 0, 30);
 
         unsigned int seed = 0;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-=======
-=======
->>>>>>> parent of 004f9e6... Removed the linked list data structure
         struct node* list = create_node(&enemy, 0);
         //        add(list, &enemy2);
         int num_enemies = 1;
-<<<<<<< HEAD
         
-<<<<<<< HEAD
->>>>>>> parent of 004f9e6... Removed the linked list data structure
-=======
->>>>>>> parent of 004f9e6... Removed the linked list data structure
         int max_enemies = 128;
         struct Player enemies[max_enemies];
         enemies[0] = enemy;
         int difficulty = 1;
-=======
->>>>>>> parent of d157790... Now the increasing enemies works
 
         // set initial scroll to 0 
         int xscroll = 0;
@@ -1027,7 +924,6 @@ int main() {
                 if (!seed)
                         seed = player.x * player.y;
                 int last_x = xscroll;
-
                 if (button_pressed(BUTTON_RIGHT)) {
                         if (player_right(&player)) {
                                 xscroll += 2;
@@ -1046,42 +942,46 @@ int main() {
                         player_stop(&player);
                 }
 
-		if(button_pressed(BUTTON_A))
-		{
-			struct Bullet bullet;
-			bullet_init(&bullet, &player);
-			bullets[bullet_count] = bullet;
-			bullet_count++;
-		}
-
                 if (last_x == xscroll)
                         for (int i = 0; i < num_enemies; i++)
-                                enemy_right(get(list, i));
+                                enemy_right(&enemies[i]);
+                           //     enemy_right(get(list, i));
                 else if (last_x < xscroll)
                         for (int i = 0; i < num_enemies; i++)
-                                get(list, i)->x -= 128;
+                                enemies[i].x -= 128;
+//                                get(list, i)->x -= 128;
                 else {
                         for (int i = 0; i < num_enemies; i++) {
-                                enemy_right(get(list, i));
-                                get(list, i)->x += 256;
+                                enemy_right(&enemies[i]);
+                                enemies[i].x += 256;
+//                                enemy_right(get(list, i));
+//                                get(list, i)->x += 256;
                         }
                 }
                 for (int i = 0; i < num_enemies; i++) {
-                        if ((get(list, i)->x >> 8) == SCREEN_WIDTH) {
+                        if ((enemies[i].x >> 8) == SCREEN_WIDTH) {
                                 xorshift(&seed);
-                                int range = (SCREEN_HEIGHT / 2 / 8);
-                                get(list, i)->y = ((abs(seed) % range) * 8) << 8;
-                                get(list, i)->x = 0;
+                                int range = (SCREEN_HEIGHT * 0.75 / 8);
+                                enemies[i].y = ((abs(seed) % range) * 8) << 8;
+                                enemies[i].x = 0;
+//                                get(list, i)->y = ((abs(seed) % range) * 8) << 8;
+//                                get(list, i)->x = 0;
                         }
                 }
                 // Add a new enemy every ~10 seconds
-                if (vblank_counter != 0 && vblank_counter % 600 == 0) {
+                if (vblank_counter != 0 && vblank_counter % 600 == 0 && num_enemies < max_enemies) {
+                        for (int i = 0; i < difficulty; i++) {
                         xorshift(&seed);
-                        int range = (SCREEN_HEIGHT / 2 / 8);
+                        int range = (SCREEN_HEIGHT * 0.75 / 8);
                         struct Player new_enemy;
                         enemy_init(&new_enemy, 0, (abs(seed) % range) * 8);
-                        list = add(list, &new_enemy);
+                        new_enemy.x -= ((abs(seed)) % 32) << 8;
+                        enemies[num_enemies] = new_enemy;
+//                        list = add(list, &new_enemy);
                         num_enemies++;
+                        }
+                        difficulty *= 2;
+                        
                 }
                 // wait for vblank before scrolling and moving sprites 
                 wait_vblank();
@@ -1089,11 +989,9 @@ int main() {
                 *bg0_x_scroll = 0.25 * xscroll;
                 *bg1_x_scroll = xscroll;
                 player_update(&player);
-		
-		for(int i = 0; i<bullet_count; i++)
-			bullet_update(&bullets[i]);
                 for (int i = 0; i < num_enemies; i++)
-                        player_update(get(list, i));
+                        player_update(&enemies[i]);
+                        //player_update(get(list, i));
                 sprite_update_all();
 
                 // delay some 
