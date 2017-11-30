@@ -987,6 +987,7 @@ int main() {
         struct node* list = create_node(&enemy, 0);
         //        add(list, &enemy2);
         int num_enemies = 1;
+<<<<<<< HEAD
         
 <<<<<<< HEAD
 >>>>>>> parent of 004f9e6... Removed the linked list data structure
@@ -996,6 +997,8 @@ int main() {
         struct Player enemies[max_enemies];
         enemies[0] = enemy;
         int difficulty = 1;
+=======
+>>>>>>> parent of d157790... Now the increasing enemies works
 
         // set initial scroll to 0 
         int xscroll = 0;
@@ -1053,44 +1056,32 @@ int main() {
 
                 if (last_x == xscroll)
                         for (int i = 0; i < num_enemies; i++)
-                                enemy_right(&enemies[i]);
-                           //     enemy_right(get(list, i));
+                                enemy_right(get(list, i));
                 else if (last_x < xscroll)
                         for (int i = 0; i < num_enemies; i++)
-                                enemies[i].x -= 128;
-//                                get(list, i)->x -= 128;
+                                get(list, i)->x -= 128;
                 else {
                         for (int i = 0; i < num_enemies; i++) {
-                                enemy_right(&enemies[i]);
-                                enemies[i].x += 256;
-//                                enemy_right(get(list, i));
-//                                get(list, i)->x += 256;
+                                enemy_right(get(list, i));
+                                get(list, i)->x += 256;
                         }
                 }
                 for (int i = 0; i < num_enemies; i++) {
-                        if ((enemies[i].x >> 8) == SCREEN_WIDTH) {
+                        if ((get(list, i)->x >> 8) == SCREEN_WIDTH) {
                                 xorshift(&seed);
-                                int range = (SCREEN_HEIGHT * 0.75 / 8);
-                                enemies[i].y = ((abs(seed) % range) * 8) << 8;
-                                enemies[i].x = 0;
-//                                get(list, i)->y = ((abs(seed) % range) * 8) << 8;
-//                                get(list, i)->x = 0;
+                                int range = (SCREEN_HEIGHT / 2 / 8);
+                                get(list, i)->y = ((abs(seed) % range) * 8) << 8;
+                                get(list, i)->x = 0;
                         }
                 }
                 // Add a new enemy every ~10 seconds
-                if (vblank_counter != 0 && vblank_counter % 600 == 0 && num_enemies < max_enemies) {
-                        for (int i = 0; i < difficulty; i++) {
+                if (vblank_counter != 0 && vblank_counter % 600 == 0) {
                         xorshift(&seed);
-                        int range = (SCREEN_HEIGHT * 0.75 / 8);
+                        int range = (SCREEN_HEIGHT / 2 / 8);
                         struct Player new_enemy;
                         enemy_init(&new_enemy, 0, (abs(seed) % range) * 8);
-                        new_enemy.x -= ((abs(seed)) % 32) << 8;
-                        enemies[num_enemies] = new_enemy;
-//                        list = add(list, &new_enemy);
+                        list = add(list, &new_enemy);
                         num_enemies++;
-                        }
-                        difficulty *= 2;
-                        
                 }
                 // wait for vblank before scrolling and moving sprites 
                 wait_vblank();
@@ -1102,8 +1093,7 @@ int main() {
 		for(int i = 0; i<bullet_count; i++)
 			bullet_update(&bullets[i]);
                 for (int i = 0; i < num_enemies; i++)
-                        player_update(&enemies[i]);
-                        //player_update(get(list, i));
+                        player_update(get(list, i));
                 sprite_update_all();
 
                 // delay some 
