@@ -16,6 +16,7 @@
 /* include the tile map we are using */
 #include "space.h"
 #include "Landscape2.h"
+//#include "Landscape.h"
 
 #define SCREEN_WIDTH 240
 #define SCREEN_HEIGHT 160
@@ -535,6 +536,17 @@ struct Player {
 
 };
 
+void enemy_init(struct Player* enemy, int x, int y) {
+        enemy->x = x << 8;
+        enemy->y = y << 8;
+        enemy->frame = 0;
+        enemy->animation_delay = 0;
+        enemy->counter = 0;
+        enemy->move = 0;
+        enemy->border = 32;
+        enemy->sprite = sprite_init(enemy->x >> 8, enemy->y >> 8, SIZE_16_8, 0, 0, enemy->frame, 0);
+}
+
 void player_init(struct Player* player) {
         player->x = 100 << 8;
         player->y = 113 << 8;
@@ -560,6 +572,19 @@ int player_left(struct Player* player) {
         }
 }
 
+int enemy_left(struct Player* enemy) {
+        sprite_set_horizontal_flip(enemy->sprite, 1);
+        enemy->move = 1;
+
+        if ((enemy->x >> 8) <= 0 - enemy->border)
+                return 1;
+        else {
+                enemy->x -= 256;
+                //player->x--;
+                return 0;
+        }
+}
+
 int player_right(struct Player* player) {
         sprite_set_horizontal_flip(player->sprite, 0);
         player->move = 1;
@@ -568,6 +593,18 @@ int player_right(struct Player* player) {
                 return 1;
         else{
                 player->x += 256*2;
+                //	player->x++;
+                return 0;
+        }
+}
+int enemy_right(struct Player* enemy) {
+        sprite_set_horizontal_flip(enemy->sprite, 0);
+        enemy->move = 1;
+
+        if ((enemy->x >> 8) >= SCREEN_WIDTH)
+                return 1;
+        else{
+                enemy->x += 256;
                 //	player->x++;
                 return 0;
         }
@@ -792,9 +829,11 @@ int main() {
         // clear all the sprites on screen now 
         sprite_clear();
 
-        // create the koopa 
         struct Player player;
         player_init(&player);
+
+        struct Player enemy;
+        enemy_init(&enemy, 0, 0);
 
         // set initial scroll to 0 
         int xscroll = 0;
@@ -818,6 +857,7 @@ int main() {
                      */
 
                 // now the arrow keys move the koopa 
+                int last_x = xscroll;
                 if (button_pressed(BUTTON_RIGHT)) {
                         if (player_right(&player)) {
                                 xscroll += 2;
@@ -836,11 +876,20 @@ int main() {
                         player_stop(&player);
                 }
 
+                if (last_x == xscroll)
+                        enemy_right(&enemy);
+                else if (last_x < xscroll)
+                        (&enemy)->x -= 256;
+                else {
+                        enemy_right(&enemy);
+                        (&enemy)->x += 256;
+                }
                 // wait for vblank before scrolling and moving sprites 
                 wait_vblank();
                 *bg0_x_scroll = 0.25 * xscroll;
                 *bg1_x_scroll = xscroll;
                 player_update(&player);
+                player_update(&enemy);
                 sprite_update_all();
 
                 // delay some 
