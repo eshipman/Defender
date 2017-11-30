@@ -805,54 +805,8 @@ koopa->counter = 0;
 sprite_position(koopa->sprite, koopa->x >> 8, koopa->y >> 8);
 } */
 
-void xorshift(unsigned int* state) {
-        unsigned int x = *state;
-        x ^= x << 13;
-        x ^= x >> 17;
-        x ^= x << 5;
-        *state = x;
-}
 
-struct node {
-        struct Player* player;
-        struct node* next;
-};
-
-struct node* create_node(struct Player* player, struct node* next) {
-        struct node* new_node =  malloc(sizeof(struct node));
-        new_node->player = player;
-        new_node->next = next;
-        return new_node;
-}
-
-struct node* add(struct node* first, struct Player* player) {
-        struct node *current = first;
-        while (current->next != 0)
-                current = current->next;
-        struct node* temp = create_node(player, 0);
-        current->next = temp;
-        return first;
-}
-
-struct Player* get(struct node* first, int index) {
-        struct node* current = first;
-        int i = 0;
-        while (current != 0 && i < index) {
-                current = current->next;
-                i++;
-        }
-        return current->player;
-}
-
-int size(struct node* first) {
-        struct node* current = first;
-        int i = 0;
-        while (current != 0) {
-                current = current->next;
-                i++;
-        }
-        return i;
-}
+void xorshift(unsigned int*);
 
 /* the main function */
 int main() {
@@ -888,8 +842,6 @@ int main() {
 
         unsigned int seed = 0;
 
-        struct node* list = create_node(&enemy, 0);
-        //        add(list, &enemy2);
         int num_enemies = 1;
         
         int max_enemies = 128;
@@ -902,7 +854,8 @@ int main() {
         int yscroll = 0;
         unsigned int vblank_counter = 0;
         /* loop forever */
-        while (1) { /*
+        char done = 0;
+        while (!done) { /*
                        if(button_pressed(BUTTON_RIGHT)) {
                        xscroll++;
                        }
@@ -945,17 +898,13 @@ int main() {
                 if (last_x == xscroll)
                         for (int i = 0; i < num_enemies; i++)
                                 enemy_right(&enemies[i]);
-                           //     enemy_right(get(list, i));
                 else if (last_x < xscroll)
                         for (int i = 0; i < num_enemies; i++)
                                 enemies[i].x -= 128;
-//                                get(list, i)->x -= 128;
                 else {
                         for (int i = 0; i < num_enemies; i++) {
                                 enemy_right(&enemies[i]);
                                 enemies[i].x += 256;
-//                                enemy_right(get(list, i));
-//                                get(list, i)->x += 256;
                         }
                 }
                 for (int i = 0; i < num_enemies; i++) {
@@ -964,8 +913,6 @@ int main() {
                                 int range = (SCREEN_HEIGHT * 0.75 / 8);
                                 enemies[i].y = ((abs(seed) % range) * 8) << 8;
                                 enemies[i].x = 0;
-//                                get(list, i)->y = ((abs(seed) % range) * 8) << 8;
-//                                get(list, i)->x = 0;
                         }
                 }
                 // Add a new enemy every ~10 seconds
