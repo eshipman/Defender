@@ -561,7 +561,7 @@ struct Bullet {
 void enemy_init(struct Player* enemy, int x, int y) {
         enemy->x = x << 8;
         enemy->y = y << 8;
-        enemy->frame = 0;
+        enemy->frame = 4;
         enemy->animation_delay = 2147483647;    //hot fix for flashing sprite
         enemy->counter = 0;                     //need to modify the update player
         enemy->move = 0;                        //function for cleaner fix
@@ -931,11 +931,11 @@ int main() {
 	
         struct Player enemy, enemy2;
         enemy_init(&enemy, 0, 0);
+        int num_enemies = 1;
         //      enemy_init(&enemy2, 0, 30);
 
         unsigned int seed = 0;
 
-        int num_enemies = 1;
 
         int max_enemies = 128;
         struct Player enemies[max_enemies];
