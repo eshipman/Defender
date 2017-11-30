@@ -813,6 +813,47 @@ void xorshift(unsigned int* state) {
         *state = x;
 }
 
+struct node {
+        struct Player* player;
+        struct node* next;
+};
+
+struct node* create_node(struct Player* player, struct node* next) {
+        struct node* new_node =  malloc(sizeof(struct node));
+        new_node->player = player;
+        new_node->next = next;
+        return new_node;
+}
+
+struct node* add(struct node* first, struct Player* player) {
+        struct node *current = first;
+        while (current->next != 0)
+                current = current->next;
+        struct node* temp = create_node(player, 0);
+        current->next = temp;
+        return first;
+}
+
+struct Player* get(struct node* first, int index) {
+        struct node* current = first;
+        int i = 0;
+        while (current != 0 && i < index) {
+                current = current->next;
+                i++;
+        }
+        return current->player;
+}
+
+int size(struct node* first) {
+        struct node* current = first;
+        int i = 0;
+        while (current != 0) {
+                current = current->next;
+                i++;
+        }
+        return i;
+}
+
 /* the main function */
 int main() {
         /* we set the mode to mode 0 with bg0 on */
@@ -841,12 +882,20 @@ int main() {
         struct Player player;
         player_init(&player);
 
-        struct Player enemy;
+        struct Player enemy, enemy2;
         enemy_init(&enemy, 0, 0);
+        //      enemy_init(&enemy2, 0, 30);
+
         unsigned int seed = 0;
+
+        struct node* list = create_node(&enemy, 0);
+        //        add(list, &enemy2);
+        int num_enemies = 1;
+
         // set initial scroll to 0 
         int xscroll = 0;
         int yscroll = 0;
+        unsigned int vblank_counter = 0;
         /* loop forever */
         while (1) { /*
                        if(button_pressed(BUTTON_RIGHT)) {
@@ -866,6 +915,7 @@ int main() {
                      */
 
                 // now the arrow keys move the koopa
+                //num_enemies = size(list);
                 if (!seed)
                         seed = player.x * player.y;
                 int last_x = xscroll;
@@ -876,7 +926,7 @@ int main() {
                 }
                 if (button_pressed(BUTTON_LEFT)) {
                         if (player_left(&player)) {
-                              xscroll -= 2;
+                                xscroll -= 2;
                         }
                 }
                 if (button_pressed(BUTTON_DOWN))
@@ -888,26 +938,42 @@ int main() {
                 }
 
                 if (last_x == xscroll)
-                        enemy_right(&enemy);
+                        for (int i = 0; i < num_enemies; i++)
+                                enemy_right(get(list, i));
                 else if (last_x < xscroll)
-                        enemy.x -= 128;
+                        for (int i = 0; i < num_enemies; i++)
+                                get(list, i)->x -= 128;
                 else {
-                        enemy_right(&enemy);
-                        enemy.x += 256;
+                        for (int i = 0; i < num_enemies; i++) {
+                                enemy_right(get(list, i));
+                                get(list, i)->x += 256;
+                        }
                 }
-                if ((enemy.x >> 8) == SCREEN_WIDTH) {
+                for (int i = 0; i < num_enemies; i++) {
+                        if ((get(list, i)->x >> 8) == SCREEN_WIDTH) {
+                                xorshift(&seed);
+                                int range = (SCREEN_HEIGHT / 2 / 8);
+                                get(list, i)->y = ((abs(seed) % range) * 8) << 8;
+                                get(list, i)->x = 0;
+                        }
+                }
+                // Add a new enemy every ~10 seconds
+                if (vblank_counter != 0 && vblank_counter % 600 == 0) {
                         xorshift(&seed);
-                        int range = (SCREEN_HEIGHT / 2);
-                        enemy.y = (abs(seed) % range) << 8;
-                        enemy.x = 0;
-//                        enemy_init(&enemy, 0, rand() % (SCREEN_HEIGHT / 2) + SCREEN_HEIGHT / 2);
+                        int range = (SCREEN_HEIGHT / 2 / 8);
+                        struct Player new_enemy;
+                        enemy_init(&new_enemy, 0, (abs(seed) % range) * 8);
+                        list = add(list, &new_enemy);
+                        num_enemies++;
                 }
                 // wait for vblank before scrolling and moving sprites 
                 wait_vblank();
+                vblank_counter++;
                 *bg0_x_scroll = 0.25 * xscroll;
                 *bg1_x_scroll = xscroll;
                 player_update(&player);
-                player_update(&enemy);
+                for (int i = 0; i < num_enemies; i++)
+                        player_update(get(list, i));
                 sprite_update_all();
 
                 // delay some 
