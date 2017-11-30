@@ -540,9 +540,9 @@ void enemy_init(struct Player* enemy, int x, int y) {
         enemy->x = x << 8;
         enemy->y = y << 8;
         enemy->frame = 0;
-        enemy->animation_delay = 0;
-        enemy->counter = 0;
-        enemy->move = 0;
+        enemy->animation_delay = 2147483647;    //hot fix for flashing sprite
+        enemy->counter = 0;                     //need to modify the update player
+        enemy->move = 0;                        //function for cleaner fix
         enemy->border = 32;
         enemy->sprite = sprite_init(enemy->x >> 8, enemy->y >> 8, SIZE_16_8, 0, 0, enemy->frame, 0);
 }
@@ -879,10 +879,10 @@ int main() {
                 if (last_x == xscroll)
                         enemy_right(&enemy);
                 else if (last_x < xscroll)
-                        (&enemy)->x -= 256;
+                        (&enemy)->x -= 128;
                 else {
                         enemy_right(&enemy);
-                        (&enemy)->x += 256;
+                        (&enemy)->x += 128;
                 }
                 // wait for vblank before scrolling and moving sprites 
                 wait_vblank();
