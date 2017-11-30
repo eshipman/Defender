@@ -811,6 +811,24 @@ void player_update(struct Player* player)
 
 }
 
+void bullet_update(struct Bullet* bullet)
+{	
+/*	if(bullet->move)
+	{
+		bullet->counter++;
+		if(bullet->counter >= bullet->animation_delay) {
+			bullet->frame = bullet->frame + 16;
+			if(bullet->frame > 16) {
+				bullet->frame = 0;
+			}
+			sprite_set_offset(bullet->sprite, bullet->frame);
+			bullet->counter = 0;
+		}
+	}
+	sprite_position(bullet->sprite, bullet->x >> 8, bullet->y >> 8);
+*/
+}
+
 /*
 // update the koopa 
 void koopa_update(struct Koopa* koopa, int xscroll) {
@@ -941,6 +959,15 @@ int main() {
         struct Player player;
         player_init(&player);
 
+	int maxbullets = 128;
+	struct Bullet bullets[maxbullets];
+	int bullet_count =0;
+	
+	struct Bullet bullet;
+	bullet_init(&bullet, &player);
+	bullets[bullet_count] = bullet;
+	bullet_count++;
+	
         struct Player enemy, enemy2;
         enemy_init(&enemy, 0, 0);
         //      enemy_init(&enemy2, 0, 30);
@@ -1002,11 +1029,13 @@ int main() {
                         player_stop(&player);
                 }
 
-	//	if(button_pressed(BUTTON_A))
-	//	{
-	//		struct Bullet bullet;
-	//		init_bullet(&bullet, &player);
-	//	}
+		if(button_pressed(BUTTON_A))
+		{
+			struct Bullet bullet;
+			bullet_init(&bullet, &player);
+			bullets[bullet_count] = bullet;
+			bullet_count++;
+		}
 
                 if (last_x == xscroll)
                         for (int i = 0; i < num_enemies; i++)
@@ -1055,6 +1084,9 @@ int main() {
                 *bg0_x_scroll = 0.25 * xscroll;
                 *bg1_x_scroll = xscroll;
                 player_update(&player);
+		
+		for(int i = 0; i<bullet_count; i++)
+			bullet_update(&bullets[i]);
                 for (int i = 0; i < num_enemies; i++)
                         player_update(&enemies[i]);
                         //player_update(get(list, i));
