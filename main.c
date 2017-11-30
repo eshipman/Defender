@@ -4,6 +4,8 @@
  * program which demonstrates sprites colliding with tiles
  */
 
+#include <stdlib.h>
+
 #include "music.h"
 #include "player.h"
 
@@ -593,10 +595,10 @@ int player_right(struct Player* player) {
                 return 1;
         else{
                 player->x += 256*2;
-                //	player->x++;
                 return 0;
         }
 }
+
 int enemy_right(struct Player* enemy) {
         sprite_set_horizontal_flip(enemy->sprite, 0);
         enemy->move = 1;
@@ -605,7 +607,6 @@ int enemy_right(struct Player* enemy) {
                 return 1;
         else{
                 enemy->x += 256;
-                //	player->x++;
                 return 0;
         }
 }
@@ -804,6 +805,14 @@ koopa->counter = 0;
 sprite_position(koopa->sprite, koopa->x >> 8, koopa->y >> 8);
 } */
 
+void xorshift(unsigned int* state) {
+        unsigned int x = *state;
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        *state = x;
+}
+
 /* the main function */
 int main() {
         /* we set the mode to mode 0 with bg0 on */
@@ -834,7 +843,7 @@ int main() {
 
         struct Player enemy;
         enemy_init(&enemy, 0, 0);
-
+        unsigned int seed = 0;
         // set initial scroll to 0 
         int xscroll = 0;
         int yscroll = 0;
@@ -856,7 +865,9 @@ int main() {
                      delay(700);
                      */
 
-                // now the arrow keys move the koopa 
+                // now the arrow keys move the koopa
+                if (!seed)
+                        seed = player.x * player.y;
                 int last_x = xscroll;
                 if (button_pressed(BUTTON_RIGHT)) {
                         if (player_right(&player)) {
@@ -879,10 +890,17 @@ int main() {
                 if (last_x == xscroll)
                         enemy_right(&enemy);
                 else if (last_x < xscroll)
-                        (&enemy)->x -= 128;
+                        enemy.x -= 128;
                 else {
                         enemy_right(&enemy);
-                        (&enemy)->x += 128;
+                        enemy.x += 256;
+                }
+                if ((enemy.x >> 8) == SCREEN_WIDTH) {
+                        xorshift(&seed);
+                        int range = (SCREEN_HEIGHT / 2);
+                        enemy.y = (abs(seed) % range) << 8;
+                        enemy.x = 0;
+//                        enemy_init(&enemy, 0, rand() % (SCREEN_HEIGHT / 2) + SCREEN_HEIGHT / 2);
                 }
                 // wait for vblank before scrolling and moving sprites 
                 wait_vblank();
