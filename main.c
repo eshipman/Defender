@@ -541,7 +541,7 @@ struct Player {
 void enemy_init(struct Player* enemy, int x, int y) {
     enemy->x = x << 8;
     enemy->y = y << 8;
-    enemy->frame = 0;
+    enemy->frame = 4;
     enemy->animation_delay = 2147483647;    //hot fix for flashing sprite
     enemy->counter = 0;                     //need to modify the update player
     enemy->move = 0;                        //function for cleaner fix
@@ -751,19 +751,21 @@ unsigned short tile_lookup(int x, int y, int xscroll, int yscroll,
 
 void player_update(struct Player* player) //player = 0 if enemy
 {
+
     if(player->move)
     {
         player->counter++;
         if(player->counter >= player->animation_delay) {
             player->frame = player->frame + 16;
             if(player->frame > 16) {
-                player->frame = 0;
+//                player->frame = 0;
             }
             sprite_set_offset(player->sprite, player->frame);
             player->counter = 0;
         }
 
     }
+
     sprite_position(player->sprite, player->x >> 8, player->y >> 8);
 
 }
