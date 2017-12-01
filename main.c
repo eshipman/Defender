@@ -587,16 +587,31 @@ int enemy_left(struct Player* enemy) {
         }
 }
 
+//Assembly function
+
+int is_player_right_border(int x, int border, int screen);
+
 int player_right(struct Player* player) {
         sprite_set_horizontal_flip(player->sprite, 0);
         player->move = 1;
-
+/*
         if ((player->x >> 8) > (SCREEN_WIDTH - 16 - player->border))
                 return 1;
         else{
                 player->x += 256*2;
                 return 0;
         }
+*/
+	if(is_player_right_border(player->x, player->border, SCREEN_WIDTH))
+	{
+		return 1;
+	}
+	else
+	{
+		player->x += 256*2;
+		return 0;
+	}
+
 }
 
 int enemy_right(struct Player* enemy) {
