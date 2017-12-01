@@ -5,6 +5,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "music.h"
 #include "player.h"
@@ -320,6 +321,7 @@ void setup_background() {
 
     //Load landscape map into screen black 18
     memcpy16_dma((unsigned short*) screen_block(18), (unsigned short*) Landscape2, Landscape2_width * Landscape2_height);
+
 }
 /* just kill time */
 void delay(unsigned int amount) {
@@ -937,7 +939,7 @@ int main() {
         player_update(&player);
         for (int i = 0; i < num_enemies; i++) {
             if (abs((enemies[i].x >> 8) - (player.x >> 8)) <= 16 && abs((enemies[i].y >> 8) - (player.y >> 8)) <= 8)
-                delay(10000000);
+                done = 1;
             player_update(&enemies[i]);
         }
         //player_update(get(list, i));
