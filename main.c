@@ -108,33 +108,33 @@ volatile unsigned short* scanline_counter = (volatile unsigned short*) 0x4000006
 
 /* wait for the screen to be fully drawn so we can do something during vblank */
 void wait_vblank() {
-        /* wait until all 160 lines have been updated */
-        while (*scanline_counter < 160) { }
+    /* wait until all 160 lines have been updated */
+    while (*scanline_counter < 160) { }
 }
 
 /* this function checks whether a particular button has been pressed */
 unsigned char button_pressed(unsigned short button) {
-        /* and the button register with the button constant we want */
-        unsigned short pressed = *buttons & button;
+    /* and the button register with the button constant we want */
+    unsigned short pressed = *buttons & button;
 
-        /* if this value is zero, then it's not pressed */
-        if (pressed == 0) {
-                return 1;
-        } else {
-                return 0;
-        }
+    /* if this value is zero, then it's not pressed */
+    if (pressed == 0) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 /* return a pointer to one of the 4 character blocks (0-3) */
 volatile unsigned short* char_block(unsigned long block) {
-        /* they are each 16K big */
-        return (volatile unsigned short*) (0x6000000 + (block * 0x4000));
+    /* they are each 16K big */
+    return (volatile unsigned short*) (0x6000000 + (block * 0x4000));
 }
 
 /* return a pointer to one of the 32 screen blocks (0-31) */
 volatile unsigned short* screen_block(unsigned long block) {
-        /* they are each 2K big */
-        return (volatile unsigned short*) (0x6000000 + (block * 0x800));
+    /* they are each 2K big */
+    return (volatile unsigned short*) (0x6000000 + (block * 0x800));
 }
 
 /* flag for turning on DMA */
@@ -200,138 +200,138 @@ unsigned int channel_b_vblanks_remaining = 0;
 
 // plays a sound using the number of samples, sample rate, and channel 'A' or 'B'
 void play_sound(const signed char* sound, int total_samples, int sample_rate, char channel) {
-        /* start by disabling the timer and dma controller (to reset a previous sound) */
-        *timer0_control = 0;
-        if (channel == 'A') {
-                *dma1_control = 0;
-        } else if (channel == 'B') {
-                *dma2_control = 0;
-        }
+    /* start by disabling the timer and dma controller (to reset a previous sound) */
+    *timer0_control = 0;
+    if (channel == 'A') {
+        *dma1_control = 0;
+    } else if (channel == 'B') {
+        *dma2_control = 0;
+    }
 
-        /* output to both sides and reset the FIFO */
-        if (channel == 'A') {
-                *sound_control |= SOUND_A_RIGHT_CHANNEL | SOUND_A_LEFT_CHANNEL | SOUND_A_FIFO_RESET;
-        } else if (channel == 'B') {
-                *sound_control |= SOUND_B_RIGHT_CHANNEL | SOUND_B_LEFT_CHANNEL | SOUND_B_FIFO_RESET;
-        }
+    /* output to both sides and reset the FIFO */
+    if (channel == 'A') {
+        *sound_control |= SOUND_A_RIGHT_CHANNEL | SOUND_A_LEFT_CHANNEL | SOUND_A_FIFO_RESET;
+    } else if (channel == 'B') {
+        *sound_control |= SOUND_B_RIGHT_CHANNEL | SOUND_B_LEFT_CHANNEL | SOUND_B_FIFO_RESET;
+    }
 
-        /* enable all sound */
-        *master_sound = SOUND_MASTER_ENABLE;
+    /* enable all sound */
+    *master_sound = SOUND_MASTER_ENABLE;
 
-        /* set the dma channel to transfer from the sound array to the sound buffer */
-        if (channel == 'A') {
-                *dma1_source = (unsigned int) sound;
-                *dma1_destination = (unsigned int) fifo_buffer_a;
-                *dma1_control = DMA_DEST_FIXED | DMA_REPEAT | DMA_32 | DMA_SYNC_TO_TIMER | DMA_ENABLE;
-        } else if (channel == 'B') {
-                *dma2_source = (unsigned int) sound;
-                *dma2_destination = (unsigned int) fifo_buffer_b;
-                *dma2_control = DMA_DEST_FIXED | DMA_REPEAT | DMA_32 | DMA_SYNC_TO_TIMER | DMA_ENABLE;
-        }
+    /* set the dma channel to transfer from the sound array to the sound buffer */
+    if (channel == 'A') {
+        *dma1_source = (unsigned int) sound;
+        *dma1_destination = (unsigned int) fifo_buffer_a;
+        *dma1_control = DMA_DEST_FIXED | DMA_REPEAT | DMA_32 | DMA_SYNC_TO_TIMER | DMA_ENABLE;
+    } else if (channel == 'B') {
+        *dma2_source = (unsigned int) sound;
+        *dma2_destination = (unsigned int) fifo_buffer_b;
+        *dma2_control = DMA_DEST_FIXED | DMA_REPEAT | DMA_32 | DMA_SYNC_TO_TIMER | DMA_ENABLE;
+    }
 
-        /* set the timer so that it increments once each time a sample is due
-         * we divide the clock (ticks/second) by the sample rate (samples/second)
-         * to get the number of ticks/samples */
-        unsigned short ticks_per_sample = CLOCK / sample_rate;
+    /* set the timer so that it increments once each time a sample is due
+     * we divide the clock (ticks/second) by the sample rate (samples/second)
+     * to get the number of ticks/samples */
+    unsigned short ticks_per_sample = CLOCK / sample_rate;
 
-        /* the timers all count up to 65536 and overflow at that point, so we count up to that
-         * now the timer will trigger each time we need a sample, and cause DMA to give it one! */
-        *timer0_data = 65536 - ticks_per_sample;
+    /* the timers all count up to 65536 and overflow at that point, so we count up to that
+     * now the timer will trigger each time we need a sample, and cause DMA to give it one! */
+    *timer0_data = 65536 - ticks_per_sample;
 
-        /* determine length of playback in vblanks
-         * this is the total number of samples, times the number of clock ticks per sample,
-         * divided by the number of machine cycles per vblank (a constant) */
-        if (channel == 'A') {
-                channel_a_vblanks_remaining = total_samples * ticks_per_sample * (1.0 / CYCLES_PER_BLANK);
-        } else if (channel == 'B') {
-                channel_b_vblanks_remaining = total_samples * ticks_per_sample * (1.0 / CYCLES_PER_BLANK);
-        }
+    /* determine length of playback in vblanks
+     * this is the total number of samples, times the number of clock ticks per sample,
+     * divided by the number of machine cycles per vblank (a constant) */
+    if (channel == 'A') {
+        channel_a_vblanks_remaining = total_samples * ticks_per_sample * (1.0 / CYCLES_PER_BLANK);
+    } else if (channel == 'B') {
+        channel_b_vblanks_remaining = total_samples * ticks_per_sample * (1.0 / CYCLES_PER_BLANK);
+    }
 
-        /* enable the timer */
-        *timer0_control = TIMER_ENABLE | TIMER_FREQ_1;
+    /* enable the timer */
+    *timer0_control = TIMER_ENABLE | TIMER_FREQ_1;
 }
 
 // called each vblank to time the sounds right
 void on_vblank() {
-        //disable interrupts temporarily
-        *interrupt_enable = 0;
-        unsigned short temp = *interrupt_state;
+    //disable interrupts temporarily
+    *interrupt_enable = 0;
+    unsigned short temp = *interrupt_state;
 
-        // look for vertical refresh
-        if ((*interrupt_state & INTERRUPT_VBLANK) == INTERRUPT_VBLANK) {
-                // update channel A
-                if (channel_a_vblanks_remaining == 0) {
-                        // restart the sound
-                        play_sound(music, music_bytes, 8000, 'A');
-                } else {
-                        channel_a_vblanks_remaining--;
-                }
-                //update channel B
-                if (channel_b_vblanks_remaining == 0) {
-                        //disable sound and DMA transfer on channel B
-                        *sound_control &= ~(SOUND_B_RIGHT_CHANNEL | SOUND_B_LEFT_CHANNEL | SOUND_B_FIFO_RESET);
-                        *dma2_control = 0;
-                } else {
-                        channel_b_vblanks_remaining--;
-                }
+    // look for vertical refresh
+    if ((*interrupt_state & INTERRUPT_VBLANK) == INTERRUPT_VBLANK) {
+        // update channel A
+        if (channel_a_vblanks_remaining == 0) {
+            // restart the sound
+            play_sound(music, music_bytes, 8000, 'A');
+        } else {
+            channel_a_vblanks_remaining--;
         }
-        // restore/enable interrupts
-        *interrupt_state = temp;
-        *interrupt_enable = 1;
+        //update channel B
+        if (channel_b_vblanks_remaining == 0) {
+            //disable sound and DMA transfer on channel B
+            *sound_control &= ~(SOUND_B_RIGHT_CHANNEL | SOUND_B_LEFT_CHANNEL | SOUND_B_FIFO_RESET);
+            *dma2_control = 0;
+        } else {
+            channel_b_vblanks_remaining--;
+        }
+    }
+    // restore/enable interrupts
+    *interrupt_state = temp;
+    *interrupt_enable = 1;
 }
 
 /* copy data using DMA */
 void memcpy16_dma(unsigned short* dest, unsigned short* source, int amount) {
-        *dma_source = (unsigned int) source;
-        *dma_destination = (unsigned int) dest;
-        *dma_count = amount | DMA_16 | DMA_ENABLE;
+    *dma_source = (unsigned int) source;
+    *dma_destination = (unsigned int) dest;
+    *dma_count = amount | DMA_16 | DMA_ENABLE;
 }
 
 /* function to setup background 0 for this program */
 void setup_background() {
 
-        /* load the palette from the image into palette memory*/
-        memcpy16_dma((unsigned short*) bg_palette, (unsigned short*) DefenderBackground_palette, PALETTE_SIZE);
+    /* load the palette from the image into palette memory*/
+    memcpy16_dma((unsigned short*) bg_palette, (unsigned short*) DefenderBackground_palette, PALETTE_SIZE);
 
-        /* load the image into char block 0 */
-        memcpy16_dma((unsigned short*) char_block(0), (unsigned short*) DefenderBackground_data,
-                        (DefenderBackground_width * DefenderBackground_height) / 2);
+    /* load the image into char block 0 */
+    memcpy16_dma((unsigned short*) char_block(0), (unsigned short*) DefenderBackground_data,
+            (DefenderBackground_width * DefenderBackground_height) / 2);
 
-        /* set all control the bits in this register */
-        *bg0_control = 3 |    /* priority, 0 is highest, 3 is lowest */
-                (0 << 2)  |       /* the char block the image data is stored in */
-                (0 << 6)  |       /* the mosaic flag */
-                (1 << 7)  |       /* color mode, 0 is 16 colors, 1 is 256 colors */
-                (16 << 8) |       /* the screen block the tile data is stored in */
-                (1 << 13) |       /* wrapping flag */
-                (0 << 14);        /* bg size, 0 is 256x256 */
+    /* set all control the bits in this register */
+    *bg0_control = 3 |    /* priority, 0 is highest, 3 is lowest */
+        (0 << 2)  |       /* the char block the image data is stored in */
+        (0 << 6)  |       /* the mosaic flag */
+        (1 << 7)  |       /* color mode, 0 is 16 colors, 1 is 256 colors */
+        (16 << 8) |       /* the screen block the tile data is stored in */
+        (1 << 13) |       /* wrapping flag */
+        (0 << 14);        /* bg size, 0 is 256x256 */
 
-        /*set the control bits for the landscape register*/
-        *bg1_control = 2 |
-                (0 << 2) |
-                (0 << 6) |
-                (1 << 7) | 
-                (18 << 8) |
-                (1 << 13) |
-                (0 << 14);
+    /*set the control bits for the landscape register*/
+    *bg1_control = 2 |
+        (0 << 2) |
+        (0 << 6) |
+        (1 << 7) | 
+        (18 << 8) |
+        (1 << 13) |
+        (0 << 14);
 
-        /* load the tile data into screen block 16 */
-        memcpy16_dma((unsigned short*) screen_block(16), (unsigned short*) space, space_width * space_height);
+    /* load the tile data into screen block 16 */
+    memcpy16_dma((unsigned short*) screen_block(16), (unsigned short*) space, space_width * space_height);
 
-        //Load landscape map into screen black 18
-        memcpy16_dma((unsigned short*) screen_block(18), (unsigned short*) Landscape2, Landscape2_width * Landscape2_height);
+    //Load landscape map into screen black 18
+    memcpy16_dma((unsigned short*) screen_block(18), (unsigned short*) Landscape2, Landscape2_width * Landscape2_height);
 }
 /* just kill time */
 void delay(unsigned int amount) {
-        for (int i = 0; i < amount * 10; i++);
+    for (int i = 0; i < amount * 10; i++);
 }
 
 /* a sprite is a moveable image on the screen */
 struct Sprite {
-        unsigned short attribute0;
-        unsigned short attribute1;
-        unsigned short attribute2;
-        unsigned short attribute3;
+    unsigned short attribute0;
+    unsigned short attribute1;
+    unsigned short attribute2;
+    unsigned short attribute3;
 };
 
 /* array of all the sprites available on the GBA */
@@ -340,156 +340,156 @@ int next_sprite_index = 0;
 
 /* the different sizes of sprites which are possible */
 enum SpriteSize {
-        SIZE_8_8,
-        SIZE_16_16,
-        SIZE_32_32,
-        SIZE_64_64,
-        SIZE_16_8,
-        SIZE_32_8,
-        SIZE_32_16,
-        SIZE_64_32,
-        SIZE_8_16,
-        SIZE_8_32,
-        SIZE_16_32,
-        SIZE_32_64
+    SIZE_8_8,
+    SIZE_16_16,
+    SIZE_32_32,
+    SIZE_64_64,
+    SIZE_16_8,
+    SIZE_32_8,
+    SIZE_32_16,
+    SIZE_64_32,
+    SIZE_8_16,
+    SIZE_8_32,
+    SIZE_16_32,
+    SIZE_32_64
 };
 
 /* function to initialize a sprite with its properties, and return a pointer */
 struct Sprite* sprite_init(int x, int y, enum SpriteSize size,
-                int horizontal_flip, int vertical_flip, int tile_index, int priority) {
+        int horizontal_flip, int vertical_flip, int tile_index, int priority) {
 
-        /* grab the next index */
-        int index = next_sprite_index++;
+    /* grab the next index */
+    int index = next_sprite_index++;
 
-        /* setup the bits used for each shape/size possible */
-        int size_bits, shape_bits;
-        switch (size) {
-                case SIZE_8_8:   size_bits = 0; shape_bits = 0; break;
-                case SIZE_16_16: size_bits = 1; shape_bits = 0; break;
-                case SIZE_32_32: size_bits = 2; shape_bits = 0; break;
-                case SIZE_64_64: size_bits = 3; shape_bits = 0; break;
-                case SIZE_16_8:  size_bits = 0; shape_bits = 1; break;
-                case SIZE_32_8:  size_bits = 1; shape_bits = 1; break;
-                case SIZE_32_16: size_bits = 2; shape_bits = 1; break;
-                case SIZE_64_32: size_bits = 3; shape_bits = 1; break;
-                case SIZE_8_16:  size_bits = 0; shape_bits = 2; break;
-                case SIZE_8_32:  size_bits = 1; shape_bits = 2; break;
-                case SIZE_16_32: size_bits = 2; shape_bits = 2; break;
-                case SIZE_32_64: size_bits = 3; shape_bits = 2; break;
-        }
+    /* setup the bits used for each shape/size possible */
+    int size_bits, shape_bits;
+    switch (size) {
+        case SIZE_8_8:   size_bits = 0; shape_bits = 0; break;
+        case SIZE_16_16: size_bits = 1; shape_bits = 0; break;
+        case SIZE_32_32: size_bits = 2; shape_bits = 0; break;
+        case SIZE_64_64: size_bits = 3; shape_bits = 0; break;
+        case SIZE_16_8:  size_bits = 0; shape_bits = 1; break;
+        case SIZE_32_8:  size_bits = 1; shape_bits = 1; break;
+        case SIZE_32_16: size_bits = 2; shape_bits = 1; break;
+        case SIZE_64_32: size_bits = 3; shape_bits = 1; break;
+        case SIZE_8_16:  size_bits = 0; shape_bits = 2; break;
+        case SIZE_8_32:  size_bits = 1; shape_bits = 2; break;
+        case SIZE_16_32: size_bits = 2; shape_bits = 2; break;
+        case SIZE_32_64: size_bits = 3; shape_bits = 2; break;
+    }
 
-        int h = horizontal_flip ? 1 : 0;
-        int v = vertical_flip ? 1 : 0;
+    int h = horizontal_flip ? 1 : 0;
+    int v = vertical_flip ? 1 : 0;
 
-        /* set up the first attribute */
-        sprites[index].attribute0 = y |             /* y coordinate */
-                (0 << 8) |          /* rendering mode */
-                (0 << 10) |         /* gfx mode */
-                (0 << 12) |         /* mosaic */
-                (1 << 13) |         /* color mode, 0:16, 1:256 */
-                (shape_bits << 14); /* shape */
+    /* set up the first attribute */
+    sprites[index].attribute0 = y |             /* y coordinate */
+        (0 << 8) |          /* rendering mode */
+        (0 << 10) |         /* gfx mode */
+        (0 << 12) |         /* mosaic */
+        (1 << 13) |         /* color mode, 0:16, 1:256 */
+        (shape_bits << 14); /* shape */
 
-        /* set up the second attribute */
-        sprites[index].attribute1 = x |             /* x coordinate */
-                (0 << 9) |          /* affine flag */
-                (h << 12) |         /* horizontal flip flag */
-                (v << 13) |         /* vertical flip flag */
-                (size_bits << 14);  /* size */
+    /* set up the second attribute */
+    sprites[index].attribute1 = x |             /* x coordinate */
+        (0 << 9) |          /* affine flag */
+        (h << 12) |         /* horizontal flip flag */
+        (v << 13) |         /* vertical flip flag */
+        (size_bits << 14);  /* size */
 
-        /* setup the second attribute */
-        sprites[index].attribute2 = tile_index |   // tile index */
-                (priority << 10) | // priority */
-                (0 << 12);         // palette bank (only 16 color)*/
+    /* setup the second attribute */
+    sprites[index].attribute2 = tile_index |   // tile index */
+        (priority << 10) | // priority */
+        (0 << 12);         // palette bank (only 16 color)*/
 
-        /* return pointer to this sprite */
-        return &sprites[index];
+    /* return pointer to this sprite */
+    return &sprites[index];
 }
 
 /* update all of the spries on the screen */
 void sprite_update_all() {
-        /* copy them all over */
-        memcpy16_dma((unsigned short*) sprite_attribute_memory, (unsigned short*) sprites, NUM_SPRITES * 4);
+    /* copy them all over */
+    memcpy16_dma((unsigned short*) sprite_attribute_memory, (unsigned short*) sprites, NUM_SPRITES * 4);
 }
 
 /* setup all sprites */
 void sprite_clear() {
-        /* clear the index counter */
-        next_sprite_index = 0;
+    /* clear the index counter */
+    next_sprite_index = 0;
 
-        /* move all sprites offscreen to hide them */
-        for(int i = 0; i < NUM_SPRITES; i++) {
-                sprites[i].attribute0 = SCREEN_HEIGHT;
-                sprites[i].attribute1 = SCREEN_WIDTH;
-        }
+    /* move all sprites offscreen to hide them */
+    for(int i = 0; i < NUM_SPRITES; i++) {
+        sprites[i].attribute0 = SCREEN_HEIGHT;
+        sprites[i].attribute1 = SCREEN_WIDTH;
+    }
 }
 
 /* set a sprite postion */
 void sprite_position(struct Sprite* sprite, int x, int y) {
-        /* clear out the y coordinate */
-        sprite->attribute0 &= 0xff00;
+    /* clear out the y coordinate */
+    sprite->attribute0 &= 0xff00;
 
-        /* set the new y coordinate */
-        sprite->attribute0 |= (y & 0xff);
+    /* set the new y coordinate */
+    sprite->attribute0 |= (y & 0xff);
 
-        /* clear out the x coordinate */
-        sprite->attribute1 &= 0xfe00;
+    /* clear out the x coordinate */
+    sprite->attribute1 &= 0xfe00;
 
-        /* set the new x coordinate */
-        sprite->attribute1 |= (x & 0x1ff);
+    /* set the new x coordinate */
+    sprite->attribute1 |= (x & 0x1ff);
 }
 
 /* move a sprite in a direction */
 void sprite_move(struct Sprite* sprite, int dx, int dy) {
-        /* get the current y coordinate */
-        int y = sprite->attribute0 & 0xff;
+    /* get the current y coordinate */
+    int y = sprite->attribute0 & 0xff;
 
-        /* get the current x coordinate */
-        int x = sprite->attribute1 & 0x1ff;
+    /* get the current x coordinate */
+    int x = sprite->attribute1 & 0x1ff;
 
-        /* move to the new location */
-        sprite_position(sprite, x + dx, y + dy);
+    /* move to the new location */
+    sprite_position(sprite, x + dx, y + dy);
 }
 
 /* change the vertical flip flag */
 void sprite_set_vertical_flip(struct Sprite* sprite, int vertical_flip) {
-        if (vertical_flip) {
-                /* set the bit */
-                sprite->attribute1 |= 0x2000;
-        } else {
-                /* clear the bit */
-                sprite->attribute1 &= 0xdfff;
-        }
+    if (vertical_flip) {
+        /* set the bit */
+        sprite->attribute1 |= 0x2000;
+    } else {
+        /* clear the bit */
+        sprite->attribute1 &= 0xdfff;
+    }
 }
 
 /* change the vertical flip flag */
 void sprite_set_horizontal_flip(struct Sprite* sprite, int horizontal_flip) {
-        if (horizontal_flip) {
-                /* set the bit */
-                sprite->attribute1 |= 0x1000;
-        } else {
-                /* clear the bit */
-                sprite->attribute1 &= 0xefff;
-        }
+    if (horizontal_flip) {
+        /* set the bit */
+        sprite->attribute1 |= 0x1000;
+    } else {
+        /* clear the bit */
+        sprite->attribute1 &= 0xefff;
+    }
 }
 
 /* change the tile offset of a sprite */
 void sprite_set_offset(struct Sprite* sprite, int offset) {
-        /* clear the old offset */
-        sprite->attribute2 &= 0xfc00;
+    /* clear the old offset */
+    sprite->attribute2 &= 0xfc00;
 
-        /* apply the new one */
-        sprite->attribute2 |= (offset & 0x03ff);
+    /* apply the new one */
+    sprite->attribute2 |= (offset & 0x03ff);
 }
 
 /* setup the sprite image and palette */
 void setup_sprite_image() {
-        memcpy16_dma((unsigned short*) sprite_palette, (unsigned short*) player_palette, PALETTE_SIZE);
-        memcpy16_dma((unsigned short*) sprite_image_memory, (unsigned short*) player_data, (player_width * player_height) / 2);
-        /* load the palette from the image into palette memory*/
-        // memcpy16_dma((unsigned short*) sprite_palette, (unsigned short*) koopa_palette, PALETTE_SIZE);
+    memcpy16_dma((unsigned short*) sprite_palette, (unsigned short*) player_palette, PALETTE_SIZE);
+    memcpy16_dma((unsigned short*) sprite_image_memory, (unsigned short*) player_data, (player_width * player_height) / 2);
+    /* load the palette from the image into palette memory*/
+    // memcpy16_dma((unsigned short*) sprite_palette, (unsigned short*) koopa_palette, PALETTE_SIZE);
 
-        /* load the image into char block 0 */
-        //memcpy16_dma((unsigned short*) sprite_image_memory, (unsigned short*) koopa_data, (koopa_width * koopa_height) / 2);
+    /* load the image into char block 0 */
+    //memcpy16_dma((unsigned short*) sprite_image_memory, (unsigned short*) koopa_data, (koopa_width * koopa_height) / 2);
 }
 /*
    struct Koopa {
@@ -527,116 +527,116 @@ int falling;
 // */
 
 struct Player {
-        struct Sprite* sprite;
+    struct Sprite* sprite;
 
-        int x, y;
-        int frame;
-        int animation_delay;
-        int counter;
-        int move;
-        int border;
+    int x, y;
+    int frame;
+    int animation_delay;
+    int counter;
+    int move;
+    int border;
 
 };
 
 void enemy_init(struct Player* enemy, int x, int y) {
-        enemy->x = x << 8;
-        enemy->y = y << 8;
-        enemy->frame = 0;
-        enemy->animation_delay = 2147483647;    //hot fix for flashing sprite
-        enemy->counter = 0;                     //need to modify the update player
-        enemy->move = 0;                        //function for cleaner fix
-        enemy->border = 32;
-        enemy->sprite = sprite_init(enemy->x >> 8, enemy->y >> 8, SIZE_16_8, 0, 0, enemy->frame, 0);
+    enemy->x = x << 8;
+    enemy->y = y << 8;
+    enemy->frame = 0;
+    enemy->animation_delay = 2147483647;    //hot fix for flashing sprite
+    enemy->counter = 0;                     //need to modify the update player
+    enemy->move = 0;                        //function for cleaner fix
+    enemy->border = 32;
+    enemy->sprite = sprite_init(enemy->x >> 8, enemy->y >> 8, SIZE_16_8, 0, 0, enemy->frame, 0);
 }
 
 void player_init(struct Player* player) {
-        player->x = 100 << 8;
-        player->y = 113 << 8;
-        player->frame = 0;
-        player->animation_delay = 8;
-        player->counter = 0;
-        player->move = 0;
-        player->border = 32;
+    player->x = 100 << 8;
+    player->y = 113 << 8;
+    player->frame = 0;
+    player->animation_delay = 8;
+    player->counter = 0;
+    player->move = 0;
+    player->border = 32;
 
-        player->sprite = sprite_init(player->x >> 8, player->y >> 8, SIZE_16_8, 0, 0, player->frame, 0);
+    player->sprite = sprite_init(player->x >> 8, player->y >> 8, SIZE_16_8, 0, 0, player->frame, 0);
 }
 
 int player_left(struct Player* player) {
-        sprite_set_horizontal_flip(player->sprite, 1);
-        player->move = 1;
+    sprite_set_horizontal_flip(player->sprite, 1);
+    player->move = 1;
 
-        if ((player->x >> 8) < player->border)
-                return 1;
-        else {
-                player->x -= 256*2;
-                //player->x--;
-                return 0;
-        }
+    if ((player->x >> 8) < player->border)
+        return 1;
+    else {
+        player->x -= 256*2;
+        //player->x--;
+        return 0;
+    }
 }
 
 int enemy_left(struct Player* enemy) {
-        sprite_set_horizontal_flip(enemy->sprite, 1);
-        enemy->move = 1;
+    sprite_set_horizontal_flip(enemy->sprite, 1);
+    enemy->move = 1;
 
-        if ((enemy->x >> 8) <= 0 - enemy->border)
-                return 1;
-        else {
-                enemy->x -= 256;
-                //player->x--;
-                return 0;
-        }
+    if ((enemy->x >> 8) <= 0 - enemy->border)
+        return 1;
+    else {
+        enemy->x -= 256;
+        //player->x--;
+        return 0;
+    }
 }
 
 int player_right(struct Player* player) {
-        sprite_set_horizontal_flip(player->sprite, 0);
-        player->move = 1;
+    sprite_set_horizontal_flip(player->sprite, 0);
+    player->move = 1;
 
-        if ((player->x >> 8) > (SCREEN_WIDTH - 16 - player->border))
-                return 1;
-        else{
-                player->x += 256*2;
-                return 0;
-        }
+    if ((player->x >> 8) > (SCREEN_WIDTH - 16 - player->border))
+        return 1;
+    else{
+        player->x += 256*2;
+        return 0;
+    }
 }
 
 int enemy_right(struct Player* enemy) {
-        sprite_set_horizontal_flip(enemy->sprite, 0);
-        enemy->move = 1;
+    sprite_set_horizontal_flip(enemy->sprite, 0);
+    enemy->move = 1;
 
-        if ((enemy->x >> 8) >= SCREEN_WIDTH)
-                return 1;
-        else{
-                enemy->x += 256;
-                return 0;
-        }
+    if ((enemy->x >> 8) >= SCREEN_WIDTH)
+        return 1;
+    else{
+        enemy->x += 256;
+        return 0;
+    }
 }
 
 int player_up(struct Player* player) {
-        player->move = 1;
+    player->move = 1;
 
-        if ((player->y >> 8) <= 0)
-                return 1;
-        else
-                player->y -= 256*2;
-        return 0;
+    if ((player->y >> 8) <= 0)
+        return 1;
+    else
+        player->y -= 256*2;
+    return 0;
 
 }
 
 int player_down(struct Player* player) {
-        player->move = 1;
+    player->move = 1;
 
-        if ((player->y >> 8) >= (SCREEN_HEIGHT - 32))
-                return 1;
-        else
-                player->y += 256*2;
-        return 0;
+    if ((player->y >> 8) >= (SCREEN_HEIGHT - 32))
+        return 1;
+    else
+        player->y += 256*2;
+    return 0;
 }
 
 void player_stop(struct Player* player) {
-        player->move = 0;
-        player->frame = 0;
-        player->counter = 7;
-        sprite_set_offset(player->sprite, player->frame);
+    player->move = 0;
+    player->frame = 0;
+    player->counter = 7;
+    sprite_set_offset(player->sprite, player->frame);
 }
 /*
 // initialize the koopa
@@ -704,53 +704,53 @@ koopa->falling = 1;
 
 // finds which tile a screen coordinate maps to, taking scroll into account
 unsigned short tile_lookup(int x, int y, int xscroll, int yscroll,
-                const unsigned short* tilemap, int tilemap_w, int tilemap_h) {
+        const unsigned short* tilemap, int tilemap_w, int tilemap_h) {
 
-        // adjust for the scroll
-        x += xscroll;
-        y += yscroll;
+    // adjust for the scroll
+    x += xscroll;
+    y += yscroll;
 
-        // convert from screen coordinates to tile coordinates
-        x >>= 3;
-        y >>= 3;
+    // convert from screen coordinates to tile coordinates
+    x >>= 3;
+    y >>= 3;
 
-        // account for wraparound
-        while (x >= tilemap_w) {
-                x -= tilemap_w;
-        }
-        while (y >= tilemap_h) {
-                y -= tilemap_h;
-        }
-        while (x < 0) {
-                x += tilemap_w;
-        }
-        while (y < 0) {
-                y += tilemap_h;
-        }
+    // account for wraparound
+    while (x >= tilemap_w) {
+        x -= tilemap_w;
+    }
+    while (y >= tilemap_h) {
+        y -= tilemap_h;
+    }
+    while (x < 0) {
+        x += tilemap_w;
+    }
+    while (y < 0) {
+        y += tilemap_h;
+    }
 
-        // lookup this tile from the map
-        int index = y * tilemap_w + x;
+    // lookup this tile from the map
+    int index = y * tilemap_w + x;
 
-        // return the tile
-        return tilemap[index];
+    // return the tile
+    return tilemap[index];
 }
 
-void player_update(struct Player* player)
+void player_update(struct Player* player) //player = 0 if enemy
 {
-        if(player->move)
-        {
-                player->counter++;
-                if(player->counter >= player->animation_delay) {
-                        player->frame = player->frame + 16;
-                        if(player->frame > 16) {
-                                player->frame = 0;
-                        }
-                        sprite_set_offset(player->sprite, player->frame);
-                        player->counter = 0;
-                }
-
+    if(player->move)
+    {
+        player->counter++;
+        if(player->counter >= player->animation_delay) {
+            player->frame = player->frame + 16;
+            if(player->frame > 16) {
+                player->frame = 0;
+            }
+            sprite_set_offset(player->sprite, player->frame);
+            player->counter = 0;
         }
-        sprite_position(player->sprite, player->x >> 8, player->y >> 8);
+
+    }
+    sprite_position(player->sprite, player->x >> 8, player->y >> 8);
 
 }
 
@@ -810,52 +810,51 @@ void xorshift(unsigned int*);
 
 /* the main function */
 int main() {
-        /* we set the mode to mode 0 with bg0 on */
-        *display_control = MODE0 | BG0_ENABLE | BG1_ENABLE | SPRITE_ENABLE | SPRITE_MAP_1D;
+    /* we set the mode to mode 0 with bg0 on */
+    *display_control = MODE0 | BG0_ENABLE | BG1_ENABLE | SPRITE_ENABLE | SPRITE_MAP_1D;
 
-        // set up interrupt handler
-        *interrupt_enable = 0;
-        *interrupt_callback = (unsigned int) &on_vblank;
-        *interrupt_selection |= INTERRUPT_VBLANK;
-        *display_interrupts |= 0x08;
-        *interrupt_enable  = 1;
-        // clear the sound control
-        *sound_control = 0;
+    // set up interrupt handler
+    *interrupt_enable = 0;
+    *interrupt_callback = (unsigned int) &on_vblank;
+    *interrupt_selection |= INTERRUPT_VBLANK;
+    *display_interrupts |= 0x08;
+    *interrupt_enable  = 1;
+    // clear the sound control
+    *sound_control = 0;
 
-        play_sound(music, music_bytes, 8000, 'A');
+    play_sound(music, music_bytes, 8000, 'A');
 
-        /* setup the background 0 */
-        setup_background();
+    /* setup the background 0 */
+    setup_background();
 
-        // setup the sprite image data 
-        setup_sprite_image();
+    // setup the sprite image data 
+    setup_sprite_image();
 
-        // clear all the sprites on screen now 
-        sprite_clear();
+    // clear all the sprites on screen now 
+    sprite_clear();
 
-        struct Player player;
-        player_init(&player);
+    struct Player player;
+    player_init(&player);
 
-        struct Player enemy, enemy2;
-        enemy_init(&enemy, 0, 0);
-        //      enemy_init(&enemy2, 0, 30);
+    struct Player enemy, enemy2;
+    enemy_init(&enemy, 0, 0);
 
-        unsigned int seed = 0;
+    unsigned int seed = 0, score = 0;
 
-        int num_enemies = 1;
-        
-        int max_enemies = 128;
-        struct Player enemies[max_enemies];
-        enemies[0] = enemy;
-        int difficulty = 1;
+    int num_enemies = 1;
 
-        // set initial scroll to 0 
-        int xscroll = 0;
-        int yscroll = 0;
-        unsigned int vblank_counter = 0;
-        /* loop forever */
-        char done = 0;
-        while (!done) { /*
+    int max_enemies = 128;
+    struct Player enemies[max_enemies];
+    enemies[0] = enemy;
+    int difficulty = 1;
+
+    // set initial scroll to 0 
+    int xscroll = 0;
+    int yscroll = 0;
+    unsigned int vblank_counter = 0;
+    /* loop forever */
+    char done = 0;
+    while (!done) { /*
                        if(button_pressed(BUTTON_RIGHT)) {
                        xscroll++;
                        }
@@ -872,102 +871,105 @@ int main() {
                      delay(700);
                      */
 
-                // now the arrow keys move the koopa
-                //num_enemies = size(list);
-                if (!seed)
-                        seed = player.x * player.y;
-                int last_x = xscroll;
-                if (button_pressed(BUTTON_RIGHT)) {
-                        if (player_right(&player)) {
-                                xscroll += 2;
-                        }
-                }
-                if (button_pressed(BUTTON_LEFT)) {
-                        if (player_left(&player)) {
-                                xscroll -= 2;
-                        }
-                }
-                if (button_pressed(BUTTON_DOWN))
-                        player_down(&player);
-                if (button_pressed(BUTTON_UP))
-                        player_up(&player);
-                if (!button_pressed(BUTTON_LEFT | BUTTON_RIGHT | BUTTON_UP | BUTTON_DOWN)) {
-                        player_stop(&player);
-                }
-
-                if (last_x == xscroll)
-                        for (int i = 0; i < num_enemies; i++)
-                                enemy_right(&enemies[i]);
-                else if (last_x < xscroll)
-                        for (int i = 0; i < num_enemies; i++)
-                                enemies[i].x -= 128;
-                else {
-                        for (int i = 0; i < num_enemies; i++) {
-                                enemy_right(&enemies[i]);
-                                enemies[i].x += 256;
-                        }
-                }
-                for (int i = 0; i < num_enemies; i++) {
-                        if ((enemies[i].x >> 8) == SCREEN_WIDTH) {
-                                xorshift(&seed);
-                                int range = (SCREEN_HEIGHT * 0.75 / 8);
-                                enemies[i].y = ((abs(seed) % range) * 8) << 8;
-                                enemies[i].x = 0;
-                        }
-                }
-                // Add a new enemy every ~10 seconds
-                if (vblank_counter != 0 && vblank_counter % 600 == 0 && num_enemies < max_enemies) {
-                        for (int i = 0; i < difficulty; i++) {
-                        xorshift(&seed);
-                        int range = (SCREEN_HEIGHT * 0.75 / 8);
-                        struct Player new_enemy;
-                        enemy_init(&new_enemy, 0, (abs(seed) % range) * 8);
-                        new_enemy.x -= ((abs(seed)) % 32) << 8;
-                        enemies[num_enemies] = new_enemy;
-//                        list = add(list, &new_enemy);
-                        num_enemies++;
-                        }
-                        difficulty *= 2;
-                        
-                }
-                // wait for vblank before scrolling and moving sprites 
-                wait_vblank();
-                vblank_counter++;
-                *bg0_x_scroll = 0.25 * xscroll;
-                *bg1_x_scroll = xscroll;
-                player_update(&player);
-                for (int i = 0; i < num_enemies; i++)
-                        player_update(&enemies[i]);
-                        //player_update(get(list, i));
-                sprite_update_all();
-
-                // delay some 
-                delay(700);
+        // now the arrow keys move the koopa
+        //num_enemies = size(list);
+        if (!seed)
+            seed = player.x * player.y;
+        int last_x = xscroll;
+        if (button_pressed(BUTTON_RIGHT)) {
+            if (player_right(&player)) {
+                xscroll += 2;
+            }
         }
+        if (button_pressed(BUTTON_LEFT)) {
+            if (player_left(&player)) {
+                xscroll -= 2;
+            }
+        }
+        if (button_pressed(BUTTON_DOWN))
+            player_down(&player);
+        if (button_pressed(BUTTON_UP))
+            player_up(&player);
+        if (!button_pressed(BUTTON_LEFT | BUTTON_RIGHT | BUTTON_UP | BUTTON_DOWN)) {
+            player_stop(&player);
+        }
+
+        if (last_x == xscroll)
+            for (int i = 0; i < num_enemies; i++)
+                enemy_right(&enemies[i]);
+        else if (last_x < xscroll)
+            for (int i = 0; i < num_enemies; i++)
+                enemies[i].x -= 128;
+        else {
+            for (int i = 0; i < num_enemies; i++) {
+                enemy_right(&enemies[i]);
+                enemies[i].x += 256;
+            }
+        }
+        for (int i = 0; i < num_enemies; i++) {
+            if ((enemies[i].x >> 8) == SCREEN_WIDTH) {
+                xorshift(&seed);
+                int range = (SCREEN_HEIGHT * 0.75 / 8);
+                enemies[i].y = ((abs(seed) % range) * 8) << 8;
+                enemies[i].x = 0;
+            }
+        }
+        // Add a new enemy every ~10 seconds
+        if (vblank_counter != 0 && vblank_counter % 600 == 0 && num_enemies < max_enemies) {
+            for (int i = 0; i < difficulty; i++) {
+                xorshift(&seed);
+                int range = (SCREEN_HEIGHT * 0.75 / 8);
+                struct Player new_enemy;
+                enemy_init(&new_enemy, 0, (abs(seed) % range) * 8);
+                new_enemy.x -= ((abs(seed)) % 32) << 8;
+                enemies[num_enemies] = new_enemy;
+                num_enemies++;
+                score++;
+            }
+            difficulty *= 2;
+
+        }
+        // wait for vblank before scrolling and moving sprites 
+        wait_vblank();
+        vblank_counter++;
+        *bg0_x_scroll = 0.25 * xscroll;
+        *bg1_x_scroll = xscroll;
+        player_update(&player);
+        for (int i = 0; i < num_enemies; i++) {
+            if (abs((enemies[i].x >> 8) - (player.x >> 8)) <= 16 && abs((enemies[i].y >> 8) - (player.y >> 8)) <= 8)
+                delay(10000000);
+            player_update(&enemies[i]);
+        }
+        //player_update(get(list, i));
+        sprite_update_all();
+
+        // delay some 
+        delay(700);
+    }
 }
 
 /* the game boy advance uses "interrupts" to handle certain situations
  * for now we will ignore these */
 void interrupt_ignore() {
-        /* do nothing */
+    /* do nothing */
 }
 
 /* this table specifies which interrupts we handle which way
  * for now, we ignore all of them */
 typedef void (*intrp)();
 const intrp IntrTable[13] = {
-        interrupt_ignore,   /* V Blank interrupt */
-        interrupt_ignore,   /* H Blank interrupt */
-        interrupt_ignore,   /* V Counter interrupt */
-        interrupt_ignore,   /* Timer 0 interrupt */
-        interrupt_ignore,   /* Timer 1 interrupt */
-        interrupt_ignore,   /* Timer 2 interrupt */
-        interrupt_ignore,   /* Timer 3 interrupt */
-        interrupt_ignore,   /* Serial communication interrupt */
-        interrupt_ignore,   /* DMA 0 interrupt */
-        interrupt_ignore,   /* DMA 1 interrupt */
-        interrupt_ignore,   /* DMA 2 interrupt */
-        interrupt_ignore,   /* DMA 3 interrupt */
-        interrupt_ignore,   /* Key interrupt */
+    interrupt_ignore,   /* V Blank interrupt */
+    interrupt_ignore,   /* H Blank interrupt */
+    interrupt_ignore,   /* V Counter interrupt */
+    interrupt_ignore,   /* Timer 0 interrupt */
+    interrupt_ignore,   /* Timer 1 interrupt */
+    interrupt_ignore,   /* Timer 2 interrupt */
+    interrupt_ignore,   /* Timer 3 interrupt */
+    interrupt_ignore,   /* Serial communication interrupt */
+    interrupt_ignore,   /* DMA 0 interrupt */
+    interrupt_ignore,   /* DMA 1 interrupt */
+    interrupt_ignore,   /* DMA 2 interrupt */
+    interrupt_ignore,   /* DMA 3 interrupt */
+    interrupt_ignore,   /* Key interrupt */
 };
 
