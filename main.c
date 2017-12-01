@@ -543,7 +543,7 @@ struct Player {
 void enemy_init(struct Player* enemy, int x, int y) {
     enemy->x = x << 8;
     enemy->y = y << 8;
-    enemy->frame = 0;
+    enemy->frame = 4;
     enemy->animation_delay = 2147483647;    //hot fix for flashing sprite
     enemy->counter = 0;                     //need to modify the update player
     enemy->move = 0;                        //function for cleaner fix
@@ -589,16 +589,30 @@ int enemy_left(struct Player* enemy) {
     }
 }
 
-int player_right(struct Player* player) {
-    sprite_set_horizontal_flip(player->sprite, 0);
-    player->move = 1;
+//Assembly function
 
-    if ((player->x >> 8) > (SCREEN_WIDTH - 16 - player->border))
-        return 1;
-    else{
-        player->x += 256*2;
-        return 0;
-    }
+int is_player_right_border(int x, int border, int screen);
+
+int player_right(struct Player* player) {
+        sprite_set_horizontal_flip(player->sprite, 0);
+        player->move = 1;
+/*
+        if ((player->x >> 8) > (SCREEN_WIDTH - 16 - player->border))
+                return 1;
+        else{
+                player->x += 256*2;
+                return 0;
+        }
+*/
+	if(is_player_right_border(player->x, player->border, SCREEN_WIDTH))
+	{
+		return 1;
+	}
+	else
+	{
+		player->x += 256*2;
+		return 0;
+	}
 }
 
 int enemy_right(struct Player* enemy) {
@@ -739,19 +753,21 @@ unsigned short tile_lookup(int x, int y, int xscroll, int yscroll,
 
 void player_update(struct Player* player) //player = 0 if enemy
 {
+
     if(player->move)
     {
         player->counter++;
         if(player->counter >= player->animation_delay) {
             player->frame = player->frame + 16;
             if(player->frame > 16) {
-                player->frame = 0;
+//                player->frame = 0;
             }
             sprite_set_offset(player->sprite, player->frame);
             player->counter = 0;
         }
 
     }
+
     sprite_position(player->sprite, player->x >> 8, player->y >> 8);
 
 }
