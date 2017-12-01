@@ -738,14 +738,17 @@ int main() {
 
         if (last_x == xscroll)
             for (int i = 0; i < num_enemies; i++)
+            {
                 enemy_right(&enemies[i]);
+                enemies[i].x += 256 * num_enemies;
+            }
         else if (last_x < xscroll)
             for (int i = 0; i < num_enemies; i++)
-                enemies[i].x -= 128;
+                enemies[i].x += 256 * num_enemies - (384);
         else {
             for (int i = 0; i < num_enemies; i++) {
                 enemy_right(&enemies[i]);
-                enemies[i].x += 256;
+                enemies[i].x += 256 * num_enemies;
             }
         }
         for (int i = 0; i < num_enemies; i++) {
