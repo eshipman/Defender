@@ -259,7 +259,7 @@ void on_vblank() {
         // update channel A
         if (channel_a_vblanks_remaining == 0) {
             // restart the sound
-            play_sound(music, music_bytes, 8000, 'A');
+            play_sound(music, music_bytes, 16000, 'A');
         } else {
             channel_a_vblanks_remaining--;
         }
@@ -682,7 +682,7 @@ int main() {
     // clear the sound control
     *sound_control = 0;
 
-    play_sound(music, music_bytes, 8000, 'A');
+    play_sound(music, music_bytes, 16000, 'A');
 
     /* setup the background 0 */
     setup_background();
