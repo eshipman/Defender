@@ -10,4 +10,4 @@ Currently there is a bug that occurs when the music loops causing sprites to mis
 
 # Dependencies:
  - currently only requires gbacc to compile and an emulator to run
- - gbacc instructions can be found here: http://cs.umw.edu/~finlayson/class/fall17/cpsc305/misc/01-compiling-cs-transfer.html
+ - gbacc instructions can be found here: http://ianfinlayson.net/class/cpsc305/misc/01-compiling-cs-transfer
